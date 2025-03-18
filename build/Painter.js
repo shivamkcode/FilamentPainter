@@ -1,4 +1,18 @@
+import { config } from "./config/Config.js";
 import { handleImageUpload } from "./Upload.js";
+function initGL() {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl || !(gl instanceof WebGLRenderingContext)) {
+        console.error('Unable to initialize WebGL. Your browser may not support it.');
+        throw new Error("Cannot initialise WebGL.");
+    }
+    else {
+        config.compute.gl = gl;
+        config.compute.canvas = canvas;
+    }
+}
+initGL();
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
         console.error('Image upload error:', result.error);
