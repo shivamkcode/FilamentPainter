@@ -1,3 +1,23 @@
+# Filament opacity training script
+# This script takes in as input a file in the form of
+#
+# #hexvalue
+# opacity
+#
+# #hexvalue
+# opacity
+#
+# such as
+#
+# #a3a3a3
+# 2
+#
+# #2f4f1a
+# 5
+#
+# and trains a linear fit (pseudo interpolation) model using gaussian weighted nearest neighbour for each
+# of the interpolation points that span [0, 1] in increments of 0.1
+
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -34,7 +54,7 @@ def generate_interpolation_points():
     z = np.arange(0, 1.1, 0.1)
     return np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
 
-def gaussian_weighted_interpolation(points, values, query_points, sigma=0.1):
+def gaussian_weighted_interpolation(points, values, query_points, sigma):
     """
     Perform Gaussian-weighted interpolation in 3D space.
 
@@ -104,7 +124,7 @@ def reshape_to_grid(interpolation_points):
 # Main function
 def main():
     # Parse the file
-    rgb_values, target_values = parse_file('tddata.txt')
+    rgb_values, target_values = parse_file('training.txt')
 
     # Normalize RGB values
     normalized_rgb = normalize_rgb(rgb_values)
@@ -113,7 +133,7 @@ def main():
     interpolation_points = generate_interpolation_points()
 
     # Perform Gaussian-weighted interpolation for the interpolation points
-    sigma = 0.03  # Bandwidth of the Gaussian kernel
+    sigma = 0.02  # Bandwidth of the Gaussian kernel
     interpolated_values = gaussian_weighted_interpolation(normalized_rgb, target_values, interpolation_points, sigma)
 
     # Evaluate training error on the known points
@@ -132,8 +152,9 @@ def main():
     array_3d_list = grid.squeeze(-1).tolist()
 
     # Export the nested list as a JSON file
-    with open('../../src/tools/autoOpacity.json', 'w') as f:
-        json.dump(array_3d_list, f, separators=(',', ':'))
+    with open('../../src/tools/AutoOpacityData.ts', 'w') as f:
+        json_string = json.dumps(array_3d_list, separators=(',', ':'))
+        f.write(f"export const interpValues: number[][][] = {json_string}")
 
 
     # # Remove the last dimension (size 1) using squeeze

@@ -11,3 +11,4 @@ yarn-error.log*
 .vscode/*
 
 /.venv
+training.txt
