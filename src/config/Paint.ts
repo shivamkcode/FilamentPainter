@@ -1,7 +1,9 @@
 import {vec2} from "../Types.js";
 
 export class PaintConfig {
-    get image(): HTMLImageElement {
+    private _image: HTMLImageElement | null = null;
+
+    public get image(): HTMLImageElement {
         if (this._image == null) {
             throw new Error('No image selected');
         }
@@ -9,13 +11,11 @@ export class PaintConfig {
         return this._image;
     }
 
-    set image(value: HTMLImageElement) {
+    public set image(value: HTMLImageElement) {
         this._image = value;
     }
 
-    private _image: HTMLImageElement | null = null;
-
-    hasImage(): boolean {
+    public hasImage(): boolean {
         return this._image != null;
     }
 

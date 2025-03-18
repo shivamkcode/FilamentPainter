@@ -54,5 +54,4 @@ export class Filament {
         const b = bigint & 255;
         return vec3(r / 255, g / 255, b / 255);
     }
-
 }
