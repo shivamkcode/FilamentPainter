@@ -1,7 +1,17 @@
 import {vec2} from "../Types.js";
+import {Filament} from "../Filament.js";
 
 export class PaintConfig {
     private _image: HTMLImageElement | null = null;
+    private _filaments: Filament[] = [];
+
+    get filaments(): Filament[] {
+        return this._filaments;
+    }
+
+    set filaments(value: Filament[]) {
+        this._filaments = value;
+    }
 
     public get image(): HTMLImageElement {
         if (this._image == null) {

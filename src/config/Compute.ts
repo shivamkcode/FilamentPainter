@@ -1,5 +1,5 @@
 export class ComputeConfig {
-    private _gl: WebGLRenderingContext | null = null; // Initialize to null or undefined
+    private _gl: WebGL2RenderingContext | null = null; // Initialize to null or undefined
     private _canvas: HTMLCanvasElement | null = null;
 
     get canvas(): HTMLCanvasElement {
@@ -20,7 +20,7 @@ export class ComputeConfig {
         return this._gl;
     }
 
-    set gl(value: WebGLRenderingContext) {
+    set gl(value: WebGL2RenderingContext) {
         this._gl = value;
     }
 }

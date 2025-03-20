@@ -1,15 +1,15 @@
 /**
- * Represents a 2-dimensional vector using Float32Array.
+ * 2-dimensional vector using Float32Array.
  */
 export type vec2 = Float32Array & { length: 2 };
 
 /**
- * Represents a 3-dimensional vector using Float32Array.
+ * 3-dimensional vector using Float32Array.
  */
 export type vec3 = Float32Array & { length: 3 };
 
 /**
- * Represents a 4-dimensional vector using Float32Array.
+ * 4-dimensional vector using Float32Array.
  */
 export type vec4 = Float32Array & { length: 4 };
 
