@@ -13,7 +13,7 @@ export class ComputeConfig {
         this._canvas = value;
     }
 
-    get gl(): WebGLRenderingContext {
+    get gl(): WebGL2RenderingContext {
         if (this._gl == null) {
             throw new Error('WebGL not supported on this browser');
         }

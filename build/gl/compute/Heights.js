@@ -1,4 +1,4 @@
-import { GLComputeEngine } from "./Engine";
+import { GLComputeEngine } from "./Engine.js";
 import { config } from "../../config/Config.js";
 const vertexShaderSource = `#version 300 es
 in vec2 a_position;
@@ -12,9 +12,11 @@ void main() {
 const fragmentShaderSource = `#version 300 es
 precision highp float;
 
-uniform vec3 colours[4];
-uniform float heights[4];
-uniform float transmissionDistances[4];
+// Default maximum of 30 colour changes
+// Can probably be increased slightly depending on WebGL hardware limitations
+uniform vec3 colours[30];
+uniform float heights[30];
+uniform float transmissionDistances[30];
 uniform sampler2D inputTexture;
 uniform vec2 resolution;
 
@@ -27,6 +29,7 @@ float linearstep(float edge0, float edge1, float x) {
 
 vec3 nearestColour(vec2 uv) {
     vec4 inputColor = texture(inputTexture, uv);
+
     vec3 targetColor = inputColor.rgb;
 
     float h = 0.0;
@@ -56,7 +59,8 @@ vec3 nearestColour(vec2 uv) {
         h += 0.08;
     }
 
-    return blendedColor;
+    return vec3(targetColor.r, targetColor.g, targetColor.b);
+    // return blendedColor + vec3(inputColor.r, 1., 1.);
 }
 
 void main() {
@@ -76,7 +80,9 @@ export class GLComputeHeights extends GLComputeEngine {
         }
         super(vertexShaderSource, fragmentShaderSource);
     }
-    uploadComputeData(gl, program, colours, heights, transmissionDistances, textureWidth, textureHeight, inputTexture) {
+    uploadComputeData(colours, heights, transmissionDistances, image) {
+        let gl = config.compute.gl;
+        let program = this.program.program;
         const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -84,40 +90,23 @@ export class GLComputeHeights extends GLComputeEngine {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionAttributeLocation);
         gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-        const framebuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-        const outputTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, outputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, textureWidth, textureHeight, 0, gl.RGBA, gl.FLOAT, null);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            console.error("Framebuffer is not complete.");
-            return null;
+        const coloursLocation = gl.getUniformLocation(program, "colours");
+        const heightsLocation = gl.getUniformLocation(program, "heights");
+        const transmissionDistancesLocation = gl.getUniformLocation(program, "transmissionDistances");
+        const inputTextureLocation = gl.getUniformLocation(program, "inputTexture");
+        if (!coloursLocation || !heightsLocation || !transmissionDistancesLocation || !inputTextureLocation) {
+            throw new Error("Uniform locations not found");
         }
-        gl.viewport(0, 0, textureWidth, textureHeight);
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-        const outputData = new Float32Array(textureWidth * textureHeight * 4);
-        gl.readPixels(0, 0, textureWidth, textureHeight, gl.RGBA, gl.FLOAT, outputData);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        gl.deleteFramebuffer(framebuffer);
-        gl.deleteTexture(outputTexture);
-        return outputData;
+        gl.uniform3fv(coloursLocation, colours);
+        gl.uniform1fv(heightsLocation, heights);
+        gl.uniform1fv(transmissionDistancesLocation, transmissionDistances);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, image.texture);
+        gl.uniform1i(inputTextureLocation, 0);
     }
-    runCompute(gl, inputTexture) {
-        const vertexShader = this.vertexShader.shader;
-        const fragmentShader = this.fragmentShader.shader;
-        if (!vertexShader || !fragmentShader) {
-            console.error("Shader creation failed.");
-            return;
-        }
-        const program = this.program.program;
-        if (!program) {
-            console.error("Program creation failed.");
-            return;
-        }
+    compute(image) {
+        let gl = config.compute.gl;
+        let program = this.program.program;
         gl.useProgram(program);
         const colours = [
             1.0, 0.0, 0.0,
@@ -127,16 +116,28 @@ export class GLComputeHeights extends GLComputeEngine {
         ];
         const heights = [0.0, 0.3, 0.6, 0.9];
         const transmissionDistances = [0.1, 0.1, 0.1, 0.1];
-        const textureWidth = 256;
-        const textureHeight = 256;
-        const result = this.uploadComputeData(gl, program, colours, heights, transmissionDistances, textureWidth, textureHeight, inputTexture);
-        if (result) {
-            console.log("Compute shader result:", result);
+        const textureWidth = image.width;
+        const textureHeight = image.height;
+        const framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+        const outputTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, outputTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, textureWidth, textureHeight, 0, gl.RGBA, gl.FLOAT, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            throw new Error("Framebuffer is not complete.");
         }
-    }
-    compute() {
-        if (!config.paint.hasImage()) {
-            throw new Error("No image to compute");
-        }
+        this.uploadComputeData(colours, heights, transmissionDistances, image);
+        gl.viewport(0, 0, textureWidth, textureHeight);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        const outputData = new Float32Array(textureWidth * textureHeight * 4);
+        gl.readPixels(0, 0, textureWidth, textureHeight, gl.RGBA, gl.FLOAT, outputData);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.deleteFramebuffer(framebuffer);
+        gl.deleteTexture(outputTexture);
+        return outputData;
     }
 }

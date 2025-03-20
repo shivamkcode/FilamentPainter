@@ -1,7 +1,8 @@
-import {getOpacity} from "./tools/AutoOpacity.js";
 import {config} from "./config/Config.js";
 import {handleImageUpload} from "./Upload.js";
-
+import {GLComputeHeights, GLComputeHeightsMode} from "./gl/compute/Heights.js";
+import {GLImage} from "./gl/Image.js";
+import {debugDisplayDataOutput} from "./debug/DisplayImage.js";
 
 function initGL() {
     const canvas = document.createElement('canvas');
@@ -14,9 +15,31 @@ function initGL() {
         config.compute.gl = gl;
         config.compute.canvas = canvas;
     }
+
+    // const ext1 = gl.getExtension('OES_texture_float');
+    const extension = gl.getExtension('EXT_color_buffer_float');
+    if (!extension) {
+        throw new Error('Required extensions not supported');
+    }
 }
 
 initGL();
+
+
+let img = new Image();
+img.onload = () => {
+    let comp = new GLComputeHeights(GLComputeHeightsMode.NEAREST);
+
+    let image = new GLImage(img);
+
+    let result = comp.compute(image);
+
+    console.log(result);
+
+    debugDisplayDataOutput(result, image.width, image.height);
+}
+
+img.src = "./test.png"
 
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
@@ -24,16 +47,6 @@ handleImageUpload('image-upload', (result) => {
     } else if (result.imageElement) {
         console.log('Image element:', result.imageElement);
         console.log('File:', result.file);
-
-        // Use the imageElement for WebGL or other purposes:
-        // Example: Create a texture from the imageElement (WebGL context assumed)
-        /*
-        const texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, result.imageElement);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        // ... use the texture ...
-        */
 
         document.body.appendChild(result.imageElement); // for preview.
     }

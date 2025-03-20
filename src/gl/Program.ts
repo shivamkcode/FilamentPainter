@@ -12,7 +12,7 @@ export class GLProgram {
         }
 
         let vertexShader = vertexGLShader.shader;
-        let fragmentShader = vertexGLShader.shader;
+        let fragmentShader = fragmentGLShader.shader;
 
         gl.attachShader(program, vertexShader);
         gl.attachShader(program, fragmentShader);

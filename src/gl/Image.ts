@@ -1,26 +1,18 @@
-import {config} from "../config/Config.js";
+import { config } from "../config/Config.js";
 
 export class GLImage {
-    private texture: WebGLTexture | null;
+    public texture: WebGLTexture;
     private imageElement: HTMLImageElement | null;
-    private width: number;
-    private height: number;
+    private _width: number;
+    private _height: number;
 
     constructor(imageElement: HTMLImageElement) {
         this.imageElement = imageElement;
-        this.width = imageElement.width;
-        this.height = imageElement.height;
-        this.texture = null;
-        this.createTexture();
-    }
+        this._width = imageElement.width;
+        this._height = imageElement.height;
 
-    private createTexture(): void {
         if (!config.compute.gl || !this.imageElement) {
-            return;
-        }
-
-        if (this.texture) {
-            config.compute.gl.deleteTexture(this.texture);
+            throw new Error("No WebGL instance to create texture");
         }
 
         this.texture = config.compute.gl.createTexture();
@@ -37,36 +29,31 @@ export class GLImage {
         config.compute.gl.texParameteri(
             config.compute.gl.TEXTURE_2D,
             config.compute.gl.TEXTURE_MIN_FILTER,
-            config.compute.gl.LINEAR // or gl.NEAREST
+            config.compute.gl.NEAREST // or gl.NEAREST
         );
         config.compute.gl.texParameteri(
             config.compute.gl.TEXTURE_2D,
             config.compute.gl.TEXTURE_MAG_FILTER,
-            config.compute.gl.LINEAR // or gl.NEAREST
+            config.compute.gl.NEAREST // or gl.NEAREST
         );
 
         config.compute.gl.bindTexture(config.compute.gl.TEXTURE_2D, null);
     }
 
-    getTexture(): WebGLTexture | null {
-        return this.texture;
+    get width(): number {
+        return this._width;
     }
 
-    getWidth(): number {
-        return this.width;
-    }
-
-    getHeight(): number {
-        return this.height;
+    get height(): number {
+        return this._height;
     }
 
     dispose(): void {
         if (this.texture) {
             config.compute.gl.deleteTexture(this.texture);
-            this.texture = null;
         }
         this.imageElement = null;
-        this.width = 0;
-        this.height = 0;
+        this._width = 0;
+        this._height = 0;
     }
 }

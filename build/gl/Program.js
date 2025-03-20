@@ -7,7 +7,7 @@ export class GLProgram {
             throw new Error("Cannot create gl program");
         }
         let vertexShader = vertexGLShader.shader;
-        let fragmentShader = vertexGLShader.shader;
+        let fragmentShader = fragmentGLShader.shader;
         gl.attachShader(program, vertexShader);
         gl.attachShader(program, fragmentShader);
         gl.linkProgram(program);

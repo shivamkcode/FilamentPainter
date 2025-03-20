@@ -1,5 +1,8 @@
 import { config } from "./config/Config.js";
 import { handleImageUpload } from "./Upload.js";
+import { GLComputeHeights, GLComputeHeightsMode } from "./gl/compute/Heights.js";
+import { GLImage } from "./gl/Image.js";
+import { debugDisplayDataOutput } from "./debug/DisplayImage.js";
 function initGL() {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
@@ -11,8 +14,21 @@ function initGL() {
         config.compute.gl = gl;
         config.compute.canvas = canvas;
     }
+    const extension = gl.getExtension('EXT_color_buffer_float');
+    if (!extension) {
+        throw new Error('Required extensions not supported');
+    }
 }
 initGL();
+let img = new Image();
+img.onload = () => {
+    let comp = new GLComputeHeights(GLComputeHeightsMode.NEAREST);
+    let image = new GLImage(img);
+    let result = comp.compute(image);
+    console.log(result);
+    debugDisplayDataOutput(result, image.width, image.height);
+};
+img.src = "./test.png";
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
         console.error('Image upload error:', result.error);

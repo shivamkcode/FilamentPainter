@@ -1,8 +1,8 @@
 import {GLShader} from "../Shader.js";
 import {GLProgram} from "../Program.js";
 import {GLImage} from "../Image.js";
-import {GLComputeEngine} from "./Engine";
-import {PaintConfig} from "../../config/Paint";
+import {GLComputeEngine} from "./Engine.js";
+import {PaintConfig} from "../../config/Paint.js";
 import {config} from "../../config/Config.js";
 
 // Vertex Shader (WebGL 2)
@@ -20,9 +20,11 @@ void main() {
 const fragmentShaderSource = `#version 300 es
 precision highp float;
 
-uniform vec3 colours[4];
-uniform float heights[4];
-uniform float transmissionDistances[4];
+// Default maximum of 30 colour changes
+// Can probably be increased slightly depending on WebGL hardware limitations
+uniform vec3 colours[30];
+uniform float heights[30];
+uniform float transmissionDistances[30];
 uniform sampler2D inputTexture;
 uniform vec2 resolution;
 
@@ -35,6 +37,7 @@ float linearstep(float edge0, float edge1, float x) {
 
 vec3 nearestColour(vec2 uv) {
     vec4 inputColor = texture(inputTexture, uv);
+
     vec3 targetColor = inputColor.rgb;
 
     float h = 0.0;
@@ -64,7 +67,8 @@ vec3 nearestColour(vec2 uv) {
         h += 0.08;
     }
 
-    return blendedColor;
+    return vec3(targetColor.r, targetColor.g, targetColor.b);
+    // return blendedColor + vec3(inputColor.r, 1., 1.);
 }
 
 void main() {
@@ -88,15 +92,13 @@ export class GLComputeHeights extends GLComputeEngine {
     }
 
      uploadComputeData(
-        gl: WebGL2RenderingContext,
-        program: WebGLProgram,
         colours: number[],
         heights: number[],
         transmissionDistances: number[],
-        textureWidth: number,
-        textureHeight: number,
-        inputTexture: WebGLTexture
-    ): Float32Array | null {
+        image: GLImage
+    ) {
+        let gl = config.compute.gl;
+        let program = this.program.program;
 
         const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
         const positionBuffer = gl.createBuffer();
@@ -107,6 +109,41 @@ export class GLComputeHeights extends GLComputeEngine {
 
         gl.enableVertexAttribArray(positionAttributeLocation);
         gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+        const coloursLocation = gl.getUniformLocation(program, "colours");
+        const heightsLocation = gl.getUniformLocation(program, "heights");
+        const transmissionDistancesLocation = gl.getUniformLocation(program, "transmissionDistances");
+        const inputTextureLocation = gl.getUniformLocation(program, "inputTexture");
+
+        if (!coloursLocation || !heightsLocation || !transmissionDistancesLocation || !inputTextureLocation) {
+            throw new Error("Uniform locations not found");
+        }
+
+        gl.uniform3fv(coloursLocation, colours);
+        gl.uniform1fv(heightsLocation, heights);
+        gl.uniform1fv(transmissionDistancesLocation, transmissionDistances);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, image.texture);
+        gl.uniform1i(inputTextureLocation, 0);
+    }
+
+    compute(image: GLImage) {
+        let gl = config.compute.gl;
+        let program = this.program.program;
+
+        gl.useProgram(program);
+
+        const colours = [
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0,
+            1.0, 1.0, 0.0,
+        ];
+        const heights = [0.0, 0.3, 0.6, 0.9];
+        const transmissionDistances = [0.1, 0.1, 0.1, 0.1];
+        const textureWidth = image.width;
+        const textureHeight = image.height;
 
         const framebuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
@@ -119,11 +156,18 @@ export class GLComputeHeights extends GLComputeEngine {
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
 
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            console.error("Framebuffer is not complete.");
-            return null;
+            throw new Error("Framebuffer is not complete.");
         }
 
+        this.uploadComputeData(
+            colours,
+            heights,
+            transmissionDistances,
+            image
+        );
+
         gl.viewport(0, 0, textureWidth, textureHeight);
+
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         const outputData = new Float32Array(textureWidth * textureHeight * 4);
@@ -135,58 +179,5 @@ export class GLComputeHeights extends GLComputeEngine {
         gl.deleteTexture(outputTexture);
 
         return outputData;
-    }
-
-     runCompute(gl: WebGL2RenderingContext, inputTexture: WebGLTexture) {
-        const vertexShader = this.vertexShader.shader;
-        const fragmentShader = this.fragmentShader.shader;
-
-        if (!vertexShader || !fragmentShader) {
-            console.error("Shader creation failed.");
-            return;
-        }
-
-        const program = this.program.program;
-
-        if (!program) {
-            console.error("Program creation failed.");
-            return;
-        }
-        gl.useProgram(program);
-
-        const colours = [
-            1.0, 0.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 0.0, 1.0,
-            1.0, 1.0, 0.0,
-        ];
-        const heights = [0.0, 0.3, 0.6, 0.9];
-        const transmissionDistances = [0.1, 0.1, 0.1, 0.1];
-        const textureWidth = 256;
-        const textureHeight = 256;
-
-        const result = this.uploadComputeData(
-            gl,
-            program,
-            colours,
-            heights,
-            transmissionDistances,
-            textureWidth,
-            textureHeight,
-            inputTexture
-        );
-
-        if (result) {
-            console.log("Compute shader result:", result);
-        }
-    }
-
-
-    compute() {
-        if (!config.paint.hasImage()) {
-            throw new Error("No image to compute");
-        }
-
-
     }
 }
