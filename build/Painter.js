@@ -28,7 +28,6 @@ img.onload = () => {
     let comp = new GLComputeHeights(HeightFunction.NEAREST);
     let image = new GLImage(img);
     let result = comp.compute(image);
-    console.log(result);
     debugDisplayDataOutput(result, image.width, image.height);
     debugDisplayHTMLImage(img);
     setupHeightSelector(() => {
@@ -54,8 +53,8 @@ setupDragAndDrop({
     itemClassName: 'draggable-item',
     dragHandleClassName: 'drag-handle',
     newItemPrefix: 'Item'
-}, () => {
-    console.log();
+}, (list) => {
+    console.log(list);
 });
 const previewWindow = document.querySelector('.preview-window');
 const resizeHandle = document.querySelector('.resize-handle');

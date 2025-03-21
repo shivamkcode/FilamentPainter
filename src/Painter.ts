@@ -37,8 +37,6 @@ img.onload = () => {
 
     let result = comp.compute(image);
 
-    console.log(result);
-
     debugDisplayDataOutput(result, image.width, image.height);
     debugDisplayHTMLImage(img);
 
@@ -73,8 +71,8 @@ setupDragAndDrop({
     itemClassName: 'draggable-item',
     dragHandleClassName: 'drag-handle',
     newItemPrefix: 'Item'
-}, () => {
-    console.log()
+}, (list: HTMLUListElement) => {
+    console.log(list)
 });
 
 // ui/resize.ts

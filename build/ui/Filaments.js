@@ -28,7 +28,7 @@ export function setupDragAndDrop(options, callback) {
             draggedItem.classList.remove('dragging');
             draggedItem = null;
         }
-        callback();
+        callback(draggableList);
     });
     draggableList.addEventListener('dragover', (e) => {
         e.preventDefault();
