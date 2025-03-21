@@ -14,17 +14,91 @@
 
 <body>
     <header class="page-header">
-        <h1>a</h1>
+        <h1>painter.vec4.ca</h1>
     </header>
     <div class="container">
         <aside class="config-sidebar">
             <nav>
-                <input id="image-upload" type="file" name="file" accept="image/*">
+                <h2>
+                    Filament Options
+                </h2>
+                <div>
+                    <label> Import Image: </label>
+                    <input id="image-upload" type="file" name="file" accept="image/*">
+                </div>
 
+                <div>
+                    <label for="height-option-selection">Topography Function: </label>
+
+                    <select name="height-option" id="height-option-selection">
+                        <option value="nearest">Nearest Match</option>
+                        <option value="greyscale-luminance">Greyscale (Luminance)</option>
+                        <option value="greyscale-max">Greyscale (Max)</option>
+                        <option value="custom" disabled >Custom (In Development)</option>
+                    </select>
+                </div>
+                <button id="add-item-button">New Filament Layer</button>
+                <ul class="draggable-list" id="draggable-list">
+                    <li class="draggable-item">
+                        <div class="drag-handle"></div>
+                        <span>Filament 1. Opacity (in mm) <input type="text"/> </span>
+                    </li>
+                    <li class="draggable-item">
+                        <div class="drag-handle"></div>
+                        <span>Filament 2. Opacity (in mm) <input type="text"/></span>
+                    </li>
+                    <li class="draggable-item">
+                        <div class="drag-handle"></div>
+                        <span>Filament 3. Opacity (in mm) <input type="text"/></span>
+                    </li>
+                    <li class="draggable-item">
+                        <div class="drag-handle"></div>
+                        <span>Filament 4. Opacity (in mm) <input type="text"/></span>
+                    </li>
+                    <li class="draggable-item">
+                        <div class="drag-handle"></div>
+                        <span>Filament 5. Opacity (in mm) <input type="text"/></span>
+                    </li>
+
+                </ul>
+
+                <h3>
+                    Filament List
+                </h3>
+
+                <h2>
+                    Export Options
+                </h2>
+
+                <div>
+                    <label>Image Resolution:</label>
+
+                    w <input class="input-number" type="number"/> x h <input class="input-number" type="number"/>
+                </div>
+
+                <div>
+                    <label>Physical Dimensions (mm):</label>
+                    w <input class="input-number" type="number"/> x h <input class="input-number" type="number"/>
+                </div>
+
+                <div class="inline-div">
+                    <h3>Print Instructions</h3>
+<!--                    <select name="language-option" id="language-option-selection">-->
+<!--                        <option value="nearest">English</option>-->
+<!--                        <option value="greyscale-luminance">Greyscale (Luminance)</option>-->
+<!--                        <option value="greyscale-max">Greyscale (Max)</option>-->
+<!--                        <option value="custom" disabled >Custom (In Development)</option>-->
+<!--                    </select>-->
+                </div>
+                <input type="text"></input>
+                <button>Export as STL</button>
+                <button disabled>Export as Project (In Development)</button>
             </nav>
         </aside>
         <main class="preview-window">
-            <h1>Main Content</h1>
+            <canvas id="canvas-preview" class="preview-canvas"></canvas>
+            <canvas id="canvas-source" class="preview-canvas"></canvas>
+            <div><h2></h2></div>
         </main>
     </div>
 

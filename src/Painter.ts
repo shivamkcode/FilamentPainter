@@ -2,7 +2,8 @@ import {config} from "./config/Config.js";
 import {handleImageUpload} from "./Upload.js";
 import {GLComputeHeights, GLComputeHeightsMode} from "./gl/compute/Heights.js";
 import {GLImage} from "./gl/Image.js";
-import {debugDisplayDataOutput} from "./debug/DisplayImage.js";
+import {debugDisplayDataOutput, debugDisplayHTMLImage} from "./debug/DisplayImage.js";
+import { setupDragAndDrop } from './ui/Filaments.js';
 
 function initGL() {
     const canvas = document.createElement('canvas');
@@ -37,9 +38,12 @@ img.onload = () => {
     console.log(result);
 
     debugDisplayDataOutput(result, image.width, image.height);
+    debugDisplayHTMLImage(img);
 }
 
-img.src = "./test.png"
+img.src = "./test.jpg"
+// img.src = "./white.png"
+
 
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
@@ -48,6 +52,15 @@ handleImageUpload('image-upload', (result) => {
         console.log('Image element:', result.imageElement);
         console.log('File:', result.file);
 
-        document.body.appendChild(result.imageElement); // for preview.
+        // document.body.appendChild(result.imageElement); // for preview.
     }
+});
+
+
+setupDragAndDrop({
+    listId: 'draggable-list',
+    addItemButtonId: 'add-item-button',
+    itemClassName: 'draggable-item',
+    dragHandleClassName: 'drag-handle',
+    newItemPrefix: 'Item'
 });

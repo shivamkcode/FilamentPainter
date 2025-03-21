@@ -2,7 +2,8 @@ import { config } from "./config/Config.js";
 import { handleImageUpload } from "./Upload.js";
 import { GLComputeHeights, GLComputeHeightsMode } from "./gl/compute/Heights.js";
 import { GLImage } from "./gl/Image.js";
-import { debugDisplayDataOutput } from "./debug/DisplayImage.js";
+import { debugDisplayDataOutput, debugDisplayHTMLImage } from "./debug/DisplayImage.js";
+import { setupDragAndDrop } from './ui/Filaments.js';
 function initGL() {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
@@ -27,8 +28,9 @@ img.onload = () => {
     let result = comp.compute(image);
     console.log(result);
     debugDisplayDataOutput(result, image.width, image.height);
+    debugDisplayHTMLImage(img);
 };
-img.src = "./test.png";
+img.src = "./test.jpg";
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
         console.error('Image upload error:', result.error);
@@ -36,6 +38,12 @@ handleImageUpload('image-upload', (result) => {
     else if (result.imageElement) {
         console.log('Image element:', result.imageElement);
         console.log('File:', result.file);
-        document.body.appendChild(result.imageElement);
     }
+});
+setupDragAndDrop({
+    listId: 'draggable-list',
+    addItemButtonId: 'add-item-button',
+    itemClassName: 'draggable-item',
+    dragHandleClassName: 'drag-handle',
+    newItemPrefix: 'Item'
 });

@@ -16,8 +16,9 @@ export class GLShader {
         gl.compileShader(this.shader);
 
         if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
+            const infoLog = gl.getShaderInfoLog(this.shader);
             gl.deleteShader(this.shader);
-            throw new Error("Shader compilation error: " + gl.getShaderInfoLog(this.shader));
+            throw new Error(`Shader compilation error: ${infoLog}`);
         }
     }
 

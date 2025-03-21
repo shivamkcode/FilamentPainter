@@ -1,5 +1,8 @@
 function debugCreateImageFromOutputData(outputData: Float32Array, width: number, height: number): HTMLCanvasElement {
-    const canvas = document.createElement('canvas');
+    const canvas: HTMLElement | null = document.getElementById('canvas-preview');
+    if (canvas == null || !(canvas instanceof HTMLCanvasElement)) {
+        throw new Error("Can't find preview canvas");
+    }
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
@@ -12,20 +15,40 @@ function debugCreateImageFromOutputData(outputData: Float32Array, width: number,
     const data = imageData.data;
 
     for (let i = 0; i < outputData.length; i += 4) {
-        data[i] = outputData[i] * 255;     // R
-        data[i + 1] = outputData[i + 1] * 255; // G
-        data[i + 2] = outputData[i + 2] * 255; // B
-        data[i + 3] = 255;                   // A (always opaque)
+        data[i] = outputData[i] * 255;
+        data[i + 1] = outputData[i + 1] * 255;
+        data[i + 2] = outputData[i + 2] * 255;
+        data[i + 3] = 255;
     }
 
     ctx.putImageData(imageData, 0, 0);
     return canvas;
 }
 
-// Example usage (assuming you have 'outputData', 'textureWidth', and 'textureHeight'):
+
 export function debugDisplayDataOutput(outputData: Float32Array, textureWidth: number, textureHeight: number) {
     if (outputData) {
-        const imageCanvas = debugCreateImageFromOutputData(outputData, textureWidth, textureHeight);
-        document.body.appendChild(imageCanvas);
+        debugCreateImageFromOutputData(outputData, textureWidth, textureHeight);
     }
+}
+
+export function debugDisplayHTMLImage(image: HTMLImageElement) {
+    const canvas: HTMLCanvasElement | null = document.getElementById('canvas-source') as HTMLCanvasElement | null;
+
+    if (!canvas) {
+        console.error('Canvas element with ID "canvas-source" not found.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+        console.error('Could not get 2D rendering context.');
+        return;
+    }
+
+    canvas.width = image.width;
+    canvas.height = image.height;
+
+    ctx.drawImage(image, 0, 0);
 }

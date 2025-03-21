@@ -1,5 +1,8 @@
 function debugCreateImageFromOutputData(outputData, width, height) {
-    const canvas = document.createElement('canvas');
+    const canvas = document.getElementById('canvas-preview');
+    if (canvas == null || !(canvas instanceof HTMLCanvasElement)) {
+        throw new Error("Can't find preview canvas");
+    }
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
@@ -19,7 +22,21 @@ function debugCreateImageFromOutputData(outputData, width, height) {
 }
 export function debugDisplayDataOutput(outputData, textureWidth, textureHeight) {
     if (outputData) {
-        const imageCanvas = debugCreateImageFromOutputData(outputData, textureWidth, textureHeight);
-        document.body.appendChild(imageCanvas);
+        debugCreateImageFromOutputData(outputData, textureWidth, textureHeight);
     }
+}
+export function debugDisplayHTMLImage(image) {
+    const canvas = document.getElementById('canvas-source');
+    if (!canvas) {
+        console.error('Canvas element with ID "canvas-source" not found.');
+        return;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Could not get 2D rendering context.');
+        return;
+    }
+    canvas.width = image.width;
+    canvas.height = image.height;
+    ctx.drawImage(image, 0, 0);
 }

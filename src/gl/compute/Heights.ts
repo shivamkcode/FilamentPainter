@@ -5,6 +5,154 @@ import {GLComputeEngine} from "./Engine.js";
 import {PaintConfig} from "../../config/Paint.js";
 import {config} from "../../config/Config.js";
 
+// Fragment Shader
+function generateFragmentShader(heightFunction: string) {
+    const fragmentShaderSource = `#version 300 es
+precision highp float;
+
+// Default maximum of 30 colour changes
+// Can probably be increased slightly depending on WebGL hardware limitations
+uniform vec3 colours[30];
+uniform float heights[30];
+uniform float opacities[30];
+uniform vec3 heightRange;
+uniform int numIndices;
+
+uniform sampler2D inputTexture;
+uniform vec2 resolution;
+
+in vec2 v_texCoord;
+out vec4 fragColor;
+
+vec3 interpolateColours(vec3 colourA, vec3 colourB, float t, float opaqueness) {
+
+    float amountInterpolated = t / opaqueness;
+    if (amountInterpolated > 1.) {
+        amountInterpolated = 1.;
+    }
+    
+    return colourA + amountInterpolated * (colourB - colourA);
+}
+
+float getHeight(vec3 colour) {
+    ${heightFunction}
+    return height;
+}
+
+vec4 compute(vec2 uv) {
+    vec4 inputColourRGBA = texture(inputTexture, uv);
+
+    vec3 sourceColour = inputColourRGBA.rgb;
+    
+    float colourHeight = getHeight(sourceColour);
+    
+    vec3 currentColour = colours[0];
+    vec3 previousColour = colours[0];
+    float previousHeight = heightRange[0];
+    float currentHeight = heightRange[0];
+    int index = 0;
+    
+    for (int i = 0; i < 2000; i++) {
+        currentHeight += heightRange[2];
+
+        if (currentHeight > colourHeight) {
+            break;
+        }
+        
+        if (currentHeight < heightRange[0]) {
+            continue;
+        }
+        
+
+        if (currentHeight < heights[index]) {
+            if (index == 0) {
+                continue;
+            }
+        } else {
+            index++;
+            previousColour = currentColour;
+            previousHeight = currentHeight;
+            
+            if (index >= numIndices) {
+                break;
+            }
+        }
+        
+        currentColour = interpolateColours(previousColour, colours[index],  currentHeight - previousHeight, opacities[index]);
+    }
+
+    
+    return vec4(currentColour, colourHeight);
+}
+
+void main() {
+    vec4 resultColor = compute(v_texCoord);
+    fragColor = vec4(resultColor);
+}
+`;
+    return fragmentShaderSource;
+}
+
+const greyscaleMaxHeight = `
+    float height = max(colour.r, max(colour.g, colour.b));
+    height *= heightRange[1];
+`;
+
+const greyscaleLuminanceHeight = `
+    float height = 0.299 * colour.r + 0.587 * colour.g + 0.114 * colour.b;
+    height *= heightRange[1];
+`;
+
+const nearestMatchHieight = `
+    vec3 currentColour = colours[0];
+    vec3 previousColour = colours[0];
+    float previousHeight = heightRange[0];
+    float currentHeight = heightRange[0];
+    int index = 0;
+    
+    float nearestHeight = 0.;
+    float nearestColourDistance = 100000.0;
+    
+    for (int i = 0; i < 2000; i++) {
+        currentHeight += heightRange[2];
+        if (currentHeight < heightRange[0]) {
+        
+            if (distance(currentColour, colour) < nearestColourDistance) {
+                nearestHeight = currentHeight;
+                nearestColourDistance = distance(currentColour, colour);
+            }
+            continue;
+        }
+        
+        if (currentHeight > heightRange[1]) {
+            break;
+        }
+
+        if (currentHeight < heights[index]) {
+            if (index == 0) {
+                continue;
+            }
+        } else {
+            index++;
+            previousColour = currentColour;
+            previousHeight = currentHeight;
+            
+            if (index >= numIndices) {
+                break;
+            }
+        }
+        
+        currentColour = interpolateColours(previousColour, colours[index],  currentHeight - previousHeight, opacities[index]);
+    
+        if (distance(currentColour, colour) < nearestColourDistance) {
+            nearestHeight = currentHeight;
+            nearestColourDistance = distance(currentColour, colour);
+        }
+    }
+    
+    float height = nearestHeight;
+`;
+
 // Vertex Shader (WebGL 2)
 const vertexShaderSource = `#version 300 es
 in vec2 a_position;
@@ -16,85 +164,28 @@ void main() {
 }
 `;
 
-// Fragment Shader (WebGL 2)
-const fragmentShaderSource = `#version 300 es
-precision highp float;
-
-// Default maximum of 30 colour changes
-// Can probably be increased slightly depending on WebGL hardware limitations
-uniform vec3 colours[30];
-uniform float heights[30];
-uniform float transmissionDistances[30];
-uniform sampler2D inputTexture;
-uniform vec2 resolution;
-
-in vec2 v_texCoord;
-out vec4 fragColor;
-
-float linearstep(float edge0, float edge1, float x) {
-    return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-}
-
-vec3 nearestColour(vec2 uv) {
-    vec4 inputColor = texture(inputTexture, uv);
-
-    vec3 targetColor = inputColor.rgb;
-
-    float h = 0.0;
-    vec3 blendedColor = vec3(0.0);
-    float lastHeight = 0.0;
-
-    for (int i = 0; i < colours.length(); ++i) {
-        float currentHeight = heights[i];
-        float transmissionDistance = transmissionDistances[i];
-        vec3 currentColor = colours[i];
-
-        if (h >= currentHeight) {
-            float blendFactor = linearstep(lastHeight, currentHeight + transmissionDistance, h);
-            blendFactor = clamp(blendFactor, 0.0, 1.0);
-            blendedColor = mix(blendedColor, currentColor, blendFactor);
-        } else {
-            float blendFactor = linearstep(lastHeight, currentHeight + transmissionDistance, h);
-            blendFactor = clamp(blendFactor, 0.0, 1.0);
-            if(i==0){
-                blendedColor = mix(vec3(0.0), currentColor, blendFactor);
-            }
-            else{
-                blendedColor = mix(blendedColor, currentColor, blendFactor);
-            }
-        }
-        lastHeight = currentHeight;
-        h += 0.08;
-    }
-
-    return vec3(targetColor.r, targetColor.g, targetColor.b);
-    // return blendedColor + vec3(inputColor.r, 1., 1.);
-}
-
-void main() {
-    vec3 resultColor = nearestColour(v_texCoord);
-    fragColor = vec4(resultColor, 1.0);
-}
-`;
-
 export enum GLComputeHeightsMode {
     NEAREST,
-    TOPOGRAPHIC
+    GREYSCALE_MAX,
+    GREYSCALE_LUMINANCE
 };
 
 export class GLComputeHeights extends GLComputeEngine {
     constructor(mode: GLComputeHeightsMode) {
         if (mode == GLComputeHeightsMode.NEAREST) {
-
+            super(vertexShaderSource, generateFragmentShader(nearestMatchHieight));
+        } else if (mode == GLComputeHeightsMode.GREYSCALE_MAX) {
+            super(vertexShaderSource, generateFragmentShader(greyscaleMaxHeight));
+        } else {
+            super(vertexShaderSource, generateFragmentShader(greyscaleLuminanceHeight));
         }
-
-        super(vertexShaderSource, fragmentShaderSource);
     }
 
      uploadComputeData(
         colours: number[],
         heights: number[],
-        transmissionDistances: number[],
+        opacities: number[],
+        heightRange: number[],
         image: GLImage
     ) {
         let gl = config.compute.gl;
@@ -110,38 +201,32 @@ export class GLComputeHeights extends GLComputeEngine {
         gl.enableVertexAttribArray(positionAttributeLocation);
         gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-        const coloursLocation = gl.getUniformLocation(program, "colours");
-        const heightsLocation = gl.getUniformLocation(program, "heights");
-        const transmissionDistancesLocation = gl.getUniformLocation(program, "transmissionDistances");
+        this.setUniform3fv("colours", colours);
+        this.setUniform1fv("heights", heights);
+        this.setUniform1fv("opacities", opacities);
+        this.setUniform3f("heightRange", heightRange[0], heightRange[1], heightRange[2]);
+        this.setUniform1i("numIndices", heights.length);
+
         const inputTextureLocation = gl.getUniformLocation(program, "inputTexture");
-
-        if (!coloursLocation || !heightsLocation || !transmissionDistancesLocation || !inputTextureLocation) {
-            throw new Error("Uniform locations not found");
-        }
-
-        gl.uniform3fv(coloursLocation, colours);
-        gl.uniform1fv(heightsLocation, heights);
-        gl.uniform1fv(transmissionDistancesLocation, transmissionDistances);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, image.texture);
         gl.uniform1i(inputTextureLocation, 0);
     }
 
-    compute(image: GLImage) {
+    /**
+     * Run compute shader
+     * @param image
+     *
+     * @return Computed values. Formatted in runs of length 4, i.e. [r1, g1, b1, h1, r2, g2, b2, h2, ...]
+     * where ri, gi, bi is the rgb values and hi is the height of the pixel at index i (flattened)
+     */
+    compute(image: GLImage): Float32Array<ArrayBuffer> {
         let gl = config.compute.gl;
         let program = this.program.program;
 
         gl.useProgram(program);
 
-        const colours = [
-            1.0, 0.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 0.0, 1.0,
-            1.0, 1.0, 0.0,
-        ];
-        const heights = [0.0, 0.3, 0.6, 0.9];
-        const transmissionDistances = [0.1, 0.1, 0.1, 0.1];
         const textureWidth = image.width;
         const textureHeight = image.height;
 
@@ -159,10 +244,22 @@ export class GLComputeHeights extends GLComputeEngine {
             throw new Error("Framebuffer is not complete.");
         }
 
+        const colours = [
+            1.0, 1.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0,
+            1.0, 1.0, 0.0,
+            1.0, 0.0, 0.0
+        ];
+        const heights = [0.8, 1.4, 1.9, 2.5, 2.6];
+        const opacities = [0.5, 0.5, 0.5, 0.5, 0.5];
+        const heightRange = [0.2, 2.6, 0.05];
+
         this.uploadComputeData(
             colours,
             heights,
-            transmissionDistances,
+            opacities,
+            heightRange,
             image
         );
 
@@ -180,4 +277,59 @@ export class GLComputeHeights extends GLComputeEngine {
 
         return outputData;
     }
+
+    private setUniform1i(name: string, a: number) {
+        const location = config.compute.gl.getUniformLocation(this.program.program, name);
+        if (location !== null) {
+            config.compute.gl.uniform1i(location, a);
+        } else {
+            console.log(`Uniform '${name}' not found, skipping.`);
+        }
+    }
+
+    private setUniform3f(name: string, a: number, b: number, c: number) {
+        const location = config.compute.gl.getUniformLocation(this.program.program, name);
+        if (location !== null) {
+            config.compute.gl.uniform3f(location, a, b, c);
+        } else {
+            console.log(`Uniform '${name}' not found, skipping.`);
+        }
+    }
+
+    private setUniform1fv(name: string, value: number[]) {
+        const location = config.compute.gl.getUniformLocation(this.program.program, name);
+        if (location !== null) {
+            config.compute.gl.uniform1fv(location, value);
+        } else {
+            console.log(`Uniform '${name}' not found, skipping.`);
+        }
+    }
+
+    private setUniform2fv(name: string, value: number[]) {
+        const location = config.compute.gl.getUniformLocation(this.program.program, name);
+        if (location !== null) {
+            config.compute.gl.uniform2fv(location, value);
+        } else {
+            console.log(`Uniform '${name}' not found, skipping.`);
+        }
+    }
+
+    private setUniform3fv(name: string, value: number[]) {
+        const location = config.compute.gl.getUniformLocation(this.program.program, name);
+        if (location !== null) {
+            config.compute.gl.uniform3fv(location, value);
+        } else {
+            console.log(`Uniform '${name}' not found, skipping.`);
+        }
+    }
+
+    private setUniform4fv(name: string, value: number[]) {
+        const location = config.compute.gl.getUniformLocation(this.program.program, name);
+        if (location !== null) {
+            config.compute.gl.uniform4fv(location, value);
+        } else {
+            console.log(`Uniform '${name}' not found, skipping.`);
+        }
+    }
+
 }
