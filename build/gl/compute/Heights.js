@@ -1,14 +1,15 @@
 import { GLComputeEngine } from "./Engine.js";
+import { HeightFunction } from "../../config/Paint.js";
 import { config } from "../../config/Config.js";
 function generateFragmentShader(heightFunction) {
     const fragmentShaderSource = `#version 300 es
 precision highp float;
 
-// Default maximum of 30 colour changes
+// Default maximum of 40 colour changes
 // Can probably be increased slightly depending on WebGL hardware limitations
-uniform vec3 colours[30];
-uniform float heights[30];
-uniform float opacities[30];
+uniform vec3 colours[40];
+uniform float heights[40];
+uniform float opacities[40];
 uniform vec3 heightRange;
 uniform int numIndices;
 
@@ -152,19 +153,12 @@ void main() {
   v_texCoord = (a_position + 1.0) * 0.5;
 }
 `;
-export var GLComputeHeightsMode;
-(function (GLComputeHeightsMode) {
-    GLComputeHeightsMode[GLComputeHeightsMode["NEAREST"] = 0] = "NEAREST";
-    GLComputeHeightsMode[GLComputeHeightsMode["GREYSCALE_MAX"] = 1] = "GREYSCALE_MAX";
-    GLComputeHeightsMode[GLComputeHeightsMode["GREYSCALE_LUMINANCE"] = 2] = "GREYSCALE_LUMINANCE";
-})(GLComputeHeightsMode || (GLComputeHeightsMode = {}));
-;
 export class GLComputeHeights extends GLComputeEngine {
     constructor(mode) {
-        if (mode == GLComputeHeightsMode.NEAREST) {
+        if (mode == HeightFunction.NEAREST) {
             super(vertexShaderSource, generateFragmentShader(nearestMatchHieight));
         }
-        else if (mode == GLComputeHeightsMode.GREYSCALE_MAX) {
+        else if (mode == HeightFunction.GREYSCALE_MAX) {
             super(vertexShaderSource, generateFragmentShader(greyscaleMaxHeight));
         }
         else {
@@ -283,4 +277,15 @@ export class GLComputeHeights extends GLComputeEngine {
             console.log(`Uniform '${name}' not found, skipping.`);
         }
     }
+}
+const computeFunctions = {};
+export function getComputeFunction(mode) {
+    if (mode in computeFunctions) {
+        if (computeFunctions[mode] == undefined) {
+            throw new Error("Shader initialisation error");
+        }
+        return computeFunctions[mode];
+    }
+    computeFunctions[mode] = new GLComputeHeights(mode);
+    return computeFunctions[mode];
 }

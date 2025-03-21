@@ -19,3 +19,9 @@ export function vec4(x, y, z, w) {
     v[3] = w;
     return v;
 }
+export class vec2i {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}

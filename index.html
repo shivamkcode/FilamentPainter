@@ -86,9 +86,15 @@
                 </h2>
 
                 <div>
-                    <label>Image Resolution:</label>
+                    <label>Image Resolution (px):</label>
 
                     w <input class="input-number" type="number"/> x h <input class="input-number" type="number"/>
+                </div>
+
+                <div>
+                    <label>Detail Size (mm):</label>
+
+                     <input class="input-number" type="number"/>
                 </div>
 
                 <div>
@@ -113,7 +119,10 @@
         <main class="preview-window">
             <canvas id="canvas-preview" class="preview-canvas"></canvas>
             <canvas id="canvas-source" class="preview-canvas"></canvas>
-            <div><h2></h2></div>
+            <div>
+                <h2></h2>
+            </div>
+            <div class="resize-handle">Drag to Resize</div>
         </main>
     </div>
 

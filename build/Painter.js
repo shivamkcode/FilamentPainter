@@ -1,9 +1,11 @@
 import { config } from "./config/Config.js";
 import { handleImageUpload } from "./Upload.js";
-import { GLComputeHeights, GLComputeHeightsMode } from "./gl/compute/Heights.js";
+import { getComputeFunction, GLComputeHeights } from "./gl/compute/Heights.js";
 import { GLImage } from "./gl/Image.js";
 import { debugDisplayDataOutput, debugDisplayHTMLImage } from "./debug/DisplayImage.js";
 import { setupDragAndDrop } from './ui/Filaments.js';
+import { setupHeightSelector } from "./ui/Heights.js";
+import { HeightFunction } from "./config/Paint.js";
 function initGL() {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
@@ -23,12 +25,18 @@ function initGL() {
 initGL();
 let img = new Image();
 img.onload = () => {
-    let comp = new GLComputeHeights(GLComputeHeightsMode.NEAREST);
+    let comp = new GLComputeHeights(HeightFunction.NEAREST);
     let image = new GLImage(img);
     let result = comp.compute(image);
     console.log(result);
     debugDisplayDataOutput(result, image.width, image.height);
     debugDisplayHTMLImage(img);
+    setupHeightSelector(() => {
+        let comp = getComputeFunction(config.paint.heightFunction);
+        let result = comp.compute(image);
+        debugDisplayDataOutput(result, image.width, image.height);
+        debugDisplayHTMLImage(img);
+    });
 };
 img.src = "./test.jpg";
 handleImageUpload('image-upload', (result) => {
@@ -46,4 +54,36 @@ setupDragAndDrop({
     itemClassName: 'draggable-item',
     dragHandleClassName: 'drag-handle',
     newItemPrefix: 'Item'
+}, () => {
+    console.log();
 });
+const previewWindow = document.querySelector('.preview-window');
+const resizeHandle = document.querySelector('.resize-handle');
+if (previewWindow && resizeHandle) {
+    let isResizing = false;
+    let startX;
+    let startWidth;
+    resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = previewWindow.offsetWidth;
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        e.preventDefault();
+    });
+    function handleMouseMove(e) {
+        if (!isResizing)
+            return;
+        let newWidth = startWidth + (e.clientX - startX);
+        if (newWidth <= 200) {
+            newWidth = 200;
+        }
+        previewWindow.style.width = `calc(${newWidth}px - 4rem)`;
+        resizeHandle.style.right = '0px';
+    }
+    function handleMouseUp() {
+        isResizing = false;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+}

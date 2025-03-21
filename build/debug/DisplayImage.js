@@ -11,12 +11,7 @@ function debugCreateImageFromOutputData(outputData, width, height) {
     }
     const imageData = ctx.createImageData(width, height);
     const data = imageData.data;
-    for (let i = 0; i < outputData.length; i += 4) {
-        data[i] = outputData[i] * 255;
-        data[i + 1] = outputData[i + 1] * 255;
-        data[i + 2] = outputData[i + 2] * 255;
-        data[i + 3] = 255;
-    }
+    data.set(outputData.map((val, i) => (i % 4 === 3 ? 255 : val * 255)));
     ctx.putImageData(imageData, 0, 0);
     return canvas;
 }

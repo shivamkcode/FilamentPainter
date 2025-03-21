@@ -36,3 +36,12 @@ export function vec4(x: number, y: number, z: number, w: number): vec4 {
     v[3] = w;
     return v;
 }
+
+export class vec2i {
+    x: number;
+    y: number;
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+}

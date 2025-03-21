@@ -4,13 +4,15 @@ body {
     display: flex;
     flex-direction: column;
     max-height: 100vh;
-    overflow: hidden; /* Prevent body scroll */
+    overflow: hidden;
     min-width: 60rem;
+    background-color: #121212;
+    color: #e0e0e0;
 }
 
 .page-header {
-    background-color: #29365d;
-    color: white;
+    background-color: #2e2e2e;
+    color: #e0e0e0;
     padding: 0.5rem;
     text-align: center;
     height: 1.25rem;
@@ -26,14 +28,15 @@ body {
     display: grid;
     grid-template-columns: 30rem auto;
     flex-grow: 1;
-    overflow: hidden; /* prevent container scroll */
+    overflow: hidden;
 }
 
 .config-sidebar {
-    background-color: rgba(208, 235, 255, 0.56);
+    background-color: #272727;
     padding: 1rem;
-    height: calc(100vh - 2.5rem); /* Adjust height for header and padding */
-    overflow-y: auto; /* Enable vertical scroll only for sidebar */
+    height: calc(100vh - 2.5rem);
+    overflow-y: auto;
+    border-right: 1px solid #333;
 }
 
 .config-sidebar nav {
@@ -54,13 +57,13 @@ body {
 
 .config-sidebar nav a {
     text-decoration: none;
-    color: #333;
+    color: #ccc;
     display: block;
     padding: 0.3125rem 0;
 }
 
 .config-sidebar nav a:hover {
-    background-color: #ccc;
+    background-color: #333;
 }
 
 .preview-window {
@@ -70,13 +73,23 @@ body {
     overflow: auto;
     gap: 1rem;
     padding: 1.25rem;
+    padding-right: 2.75rem;
     height: calc(100vh - 2.5rem);
-    background-color: #b9c8ff;
+    background-color: #1e1e1e;
+    position: relative;
+}
+
+.preview-window {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+.preview-window::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
 }
 
 .preview-canvas {
-    border: 1px solid #ccc;
-    max-width: 80rem;
+    border: 1px solid #444;
+    /*max-width: 80rem;*/
     height: auto;
 }
 
@@ -87,17 +100,18 @@ body {
 }
 
 .draggable-item {
-    background-color: #e0e0e0;
-    border: 0.0625rem solid #ccc;
+    background-color: #333;
+    border: 0.0625rem solid #444;
     padding: 0.625rem;
     margin-bottom: 0.3125rem;
     user-select: none;
     display: flex;
     align-items: center;
+    color: #ccc;
 }
 
 .drag-handle {
-    background-color: #bbb;
+    background-color: #555;
     width: 0.9375rem;
     height: 0.9375rem;
     cursor: grab;
@@ -112,14 +126,19 @@ body {
     margin-bottom: 0.625rem;
     cursor: pointer;
     padding: 0.3125rem 0.625rem;
+    background-color: #444;
+    color: #ccc;
+    border: none;
 }
 
 h2 {
     margin: 1rem 0;
+    color: #ccc;
 }
 
 h3 {
-    margin: 0.5rem 0
+    margin: 0.5rem 0;
+    color: #ccc;
 }
 
 .inline-div {
@@ -129,5 +148,41 @@ h3 {
 
 .input-number {
     width: 4rem;
+    background-color: #444; /* Lighter background for text boxes */
+    color: #ccc;
+    border: 1px solid #555; /* Lighter border */
 }
 
+input, select, textarea {
+    background-color: #444; /* Lighter background for text boxes */
+    color: #ccc;
+    border: 1px solid #555; /* Lighter border */
+}
+
+select option {
+    background-color: #333;
+    color: #ccc;
+}
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1.5rem;
+    height: 100%;
+    background: #555;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    font-weight: lighter;
+    font-size: 1rem;
+    writing-mode: vertical-rl; /* Rotate text */
+    text-orientation: mixed; /* Ensure proper orientation */
+    border-radius: 0.625rem;
+}
+
+.resize-handle:active {
+    cursor: grabbing;
+}

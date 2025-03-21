@@ -1,4 +1,4 @@
-export function setupDragAndDrop(options) {
+export function setupDragAndDrop(options, callback) {
     const draggableList = document.getElementById(options.listId);
     const addItemButton = document.getElementById(options.addItemButtonId);
     let draggedItem = null;
@@ -28,6 +28,7 @@ export function setupDragAndDrop(options) {
             draggedItem.classList.remove('dragging');
             draggedItem = null;
         }
+        callback();
     });
     draggableList.addEventListener('dragover', (e) => {
         e.preventDefault();

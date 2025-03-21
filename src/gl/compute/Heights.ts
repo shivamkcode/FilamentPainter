@@ -1,8 +1,6 @@
-import {GLShader} from "../Shader.js";
-import {GLProgram} from "../Program.js";
 import {GLImage} from "../Image.js";
 import {GLComputeEngine} from "./Engine.js";
-import {PaintConfig} from "../../config/Paint.js";
+import {HeightFunction} from "../../config/Paint.js";
 import {config} from "../../config/Config.js";
 
 // Fragment Shader
@@ -10,11 +8,11 @@ function generateFragmentShader(heightFunction: string) {
     const fragmentShaderSource = `#version 300 es
 precision highp float;
 
-// Default maximum of 30 colour changes
+// Default maximum of 40 colour changes
 // Can probably be increased slightly depending on WebGL hardware limitations
-uniform vec3 colours[30];
-uniform float heights[30];
-uniform float opacities[30];
+uniform vec3 colours[40];
+uniform float heights[40];
+uniform float opacities[40];
 uniform vec3 heightRange;
 uniform int numIndices;
 
@@ -164,17 +162,12 @@ void main() {
 }
 `;
 
-export enum GLComputeHeightsMode {
-    NEAREST,
-    GREYSCALE_MAX,
-    GREYSCALE_LUMINANCE
-};
 
 export class GLComputeHeights extends GLComputeEngine {
-    constructor(mode: GLComputeHeightsMode) {
-        if (mode == GLComputeHeightsMode.NEAREST) {
+    constructor(mode: HeightFunction) {
+        if (mode == HeightFunction.NEAREST) {
             super(vertexShaderSource, generateFragmentShader(nearestMatchHieight));
-        } else if (mode == GLComputeHeightsMode.GREYSCALE_MAX) {
+        } else if (mode == HeightFunction.GREYSCALE_MAX) {
             super(vertexShaderSource, generateFragmentShader(greyscaleMaxHeight));
         } else {
             super(vertexShaderSource, generateFragmentShader(greyscaleLuminanceHeight));
@@ -331,5 +324,18 @@ export class GLComputeHeights extends GLComputeEngine {
             console.log(`Uniform '${name}' not found, skipping.`);
         }
     }
+}
 
+const computeFunctions: { [key in HeightFunction]?: GLComputeHeights } = {};
+
+export function getComputeFunction(mode: HeightFunction): GLComputeHeights {
+    if (mode in computeFunctions) {
+        if (computeFunctions[mode] == undefined) {
+            throw new Error("Shader initialisation error");
+        }
+        return computeFunctions[mode];
+    }
+
+    computeFunctions[mode] = new GLComputeHeights(mode);
+    return computeFunctions[mode];
 }

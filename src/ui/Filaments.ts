@@ -6,7 +6,7 @@ export interface DragAndDropOptions {
     newItemPrefix: string;
 }
 
-export function setupDragAndDrop(options: DragAndDropOptions): void {
+export function setupDragAndDrop(options: DragAndDropOptions, callback: () => void): void {
     const draggableList = document.getElementById(options.listId) as HTMLUListElement;
     const addItemButton = document.getElementById(options.addItemButtonId) as HTMLButtonElement;
     let draggedItem: HTMLElement | null = null;
@@ -40,6 +40,7 @@ export function setupDragAndDrop(options: DragAndDropOptions): void {
             draggedItem.classList.remove('dragging');
             draggedItem = null;
         }
+        callback();
     });
 
     draggableList.addEventListener('dragover', (e: DragEvent) => {

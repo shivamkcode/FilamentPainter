@@ -1,9 +1,25 @@
 import {vec2} from "../Types.js";
 import {Filament} from "../Filament.js";
 
+export enum HeightFunction {
+    NEAREST,
+    GREYSCALE_MAX,
+    GREYSCALE_LUMINANCE
+};
+
+
 export class PaintConfig {
     private _image: HTMLImageElement | null = null;
     private _filaments: Filament[] = [];
+    private _heightFunction: HeightFunction = HeightFunction.NEAREST;
+
+    get heightFunction(): HeightFunction {
+        return this._heightFunction;
+    }
+
+    set heightFunction(value: HeightFunction) {
+        this._heightFunction = value;
+    }
 
     get filaments(): Filament[] {
         return this._filaments;
@@ -28,7 +44,4 @@ export class PaintConfig {
     public hasImage(): boolean {
         return this._image != null;
     }
-
-    resolution: vec2 = vec2(0, 0);
-    size: vec2 = vec2(0, 0);
 }
