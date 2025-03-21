@@ -6,6 +6,7 @@ import {debugDisplayDataOutput, debugDisplayHTMLImage} from "./debug/DisplayImag
 import {setupDragAndDrop} from './ui/Filaments.js';
 import {setupHeightSelector} from "./ui/Heights.js";
 import {HeightFunction} from "./config/Paint.js";
+import {generateLargeHeightmap, generateSTLAndDownload, getHeights} from "./tools/HeightmapExport.js";
 
 function initGL() {
     const canvas = document.createElement('canvas');
@@ -46,6 +47,13 @@ img.onload = () => {
         let result = comp.compute(image);
         debugDisplayDataOutput(result, image.width, image.height);
         debugDisplayHTMLImage(img);
+
+        let heights = getHeights(result, image.width, image.height);
+        console.log(heights);
+
+        generateSTLAndDownload(heights);
+
+        // downloadSTL(stlString, `large_heightmap_scaled.stl`);
     });
 }
 
@@ -112,6 +120,35 @@ if (previewWindow && resizeHandle) {
         document.removeEventListener('mouseup', handleMouseUp);
     }
 
-    // const newWidth = 1200;
-    // previewWindow.style.width = `calc(${newWidth}px - 4rem)`;
+    previewWindow.style.width = `50vw`;
+
+    window.addEventListener('resize', () => {
+        previewWindow.style.width = `50vw`;
+    });
 }
+
+
+
+
+// Example usage in a browser environment:
+// const largeHeightmapData = generateLargeHeightmap(50, 50); // Generate a 50x50 heightmap
+//
+// // Example with a scaling factor of 2
+// const scaleFactor = 0.5*(50/49);
+// const stlString = generateSTL(largeHeightmapData, "large_heightmap_scaled.stl", scaleFactor);
+//
+// // Function to trigger a file download in the browser
+// function downloadSTL(stlContent: string, filename: string) {
+//     const blob = new Blob([stlContent], { type: 'application/vnd.ms-stlascii' });
+//     const link = document.createElement('a');
+//     link.href = URL.createObjectURL(blob);
+//     link.download = filename;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     URL.revokeObjectURL(link.href);
+// }
+
+// Trigger the download
+// downloadSTL(stlString, `large_heightmap_scaled_${scaleFactor}x.stl`);
+// console.log(`Large STL string with scaling factor of ${scaleFactor} initiated.`);
