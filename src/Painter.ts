@@ -48,10 +48,10 @@ img.onload = () => {
         debugDisplayDataOutput(result, image.width, image.height);
         debugDisplayHTMLImage(img);
 
-        let heights = getHeights(result, image.width, image.height);
-        console.log(heights);
-
-        generateSTLAndDownload(heights);
+        // let heights = getHeights(result, image.width, image.height);
+        // console.log(heights);
+        //
+        // generateSTLAndDownload(heights);
 
         // downloadSTL(stlString, `large_heightmap_scaled.stl`);
     });

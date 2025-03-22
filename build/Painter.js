@@ -6,7 +6,6 @@ import { debugDisplayDataOutput, debugDisplayHTMLImage } from "./debug/DisplayIm
 import { setupDragAndDrop } from './ui/Filaments.js';
 import { setupHeightSelector } from "./ui/Heights.js";
 import { HeightFunction } from "./config/Paint.js";
-import { generateSTLAndDownload, getHeights } from "./tools/HeightmapExport.js";
 function initGL() {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
@@ -36,9 +35,6 @@ img.onload = () => {
         let result = comp.compute(image);
         debugDisplayDataOutput(result, image.width, image.height);
         debugDisplayHTMLImage(img);
-        let heights = getHeights(result, image.width, image.height);
-        console.log(heights);
-        generateSTLAndDownload(heights);
     });
 };
 img.src = "./test.jpg";
