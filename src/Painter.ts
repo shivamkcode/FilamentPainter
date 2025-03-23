@@ -43,10 +43,6 @@ initGL();
 // }
 
 
-
-
-
-
 const imageResolutionX = document.getElementById('image-resolution-x') as HTMLInputElement;
 const imageResolutionY = document.getElementById('image-resolution-y') as HTMLInputElement;
 const physicalXInput = document.getElementById('physical-x') as HTMLInputElement;

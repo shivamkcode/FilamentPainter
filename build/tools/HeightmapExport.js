@@ -9,7 +9,7 @@ export function getHeights(outputData, width, height) {
     }
     return result;
 }
-export function generateSTLAndDownload(heightmap, filename = "heightmap.stl", scaleFactor = 1) {
+export function generateSTLAndDownload(heightmap, filename = "filament-painting.stl", scaleFactor = 1) {
     const numRows = heightmap.length;
     const numCols = heightmap[0].length;
     const addTriangle = (v1, v2, v3, normal, data, offset) => {
@@ -19,23 +19,23 @@ export function generateSTLAndDownload(heightmap, filename = "heightmap.stl", sc
         offset += 4;
         data.setFloat32(offset, normal[2], true);
         offset += 4;
-        data.setFloat32(offset, v1[0] * scaleFactor, true);
+        data.setFloat32(offset, -v1[0] * scaleFactor, true);
         offset += 4;
         data.setFloat32(offset, v1[1] * scaleFactor, true);
         offset += 4;
-        data.setFloat32(offset, v1[2] * scaleFactor, true);
+        data.setFloat32(offset, v1[2], true);
         offset += 4;
-        data.setFloat32(offset, v2[0] * scaleFactor, true);
+        data.setFloat32(offset, -v2[0] * scaleFactor, true);
         offset += 4;
         data.setFloat32(offset, v2[1] * scaleFactor, true);
         offset += 4;
-        data.setFloat32(offset, v2[2] * scaleFactor, true);
+        data.setFloat32(offset, v2[2], true);
         offset += 4;
-        data.setFloat32(offset, v3[0] * scaleFactor, true);
+        data.setFloat32(offset, -v3[0] * scaleFactor, true);
         offset += 4;
         data.setFloat32(offset, v3[1] * scaleFactor, true);
         offset += 4;
-        data.setFloat32(offset, v3[2] * scaleFactor, true);
+        data.setFloat32(offset, v3[2], true);
         offset += 4;
         data.setUint16(offset, 0, true);
         offset += 2;

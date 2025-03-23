@@ -39,6 +39,10 @@ vec4 compute(vec2 uv) {
 
     vec3 sourceColour = inputColourRGBA.rgb;
     
+    if (inputColourRGBA[3] == 0.) {
+        return vec4(0, 0, 0, 0);
+    }
+    
     float colourHeight = getHeight(sourceColour);
     
     vec3 currentColour = colours[0];
