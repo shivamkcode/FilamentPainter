@@ -12,6 +12,14 @@ body {
     font-size: 1rem;
 }
 
+header {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-weight: bold;
+    padding: 0 5rem;
+}
+
 .page-header {
     background-color: #2e2e2e;
     color: #e0e0e0;
@@ -352,4 +360,13 @@ button:disabled,
 button[disabled]:active{
     background-color: #333;
     color: #ccc;
+}
+
+textarea {
+    font-family: serif;
+    font-size: 0.9rem;
+}
+
+#buy-commercial {
+    background-color: #396042;
 }

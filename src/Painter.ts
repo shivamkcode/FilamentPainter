@@ -96,3 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 setupExport();
 
+document.getElementById("buy-commercial")?.addEventListener("click", () => {
+    window.open("https://ko-fi.com/s/1d20470ee2", "_blank");
+});
