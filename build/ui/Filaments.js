@@ -352,8 +352,8 @@ export function setupDragAndDrop(callback) {
                         <div class="h-gap"></div>
                         <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
                         <div class="h-gap-small"></div> mm
-                        <button class="delete-layer-button">Delete</button>
                     </div>
+                    <button class="delete-layer-button">Delete</button>
                 `;
                     draggableList.appendChild(newLayerItem);
                     attachDragHandlers(newLayerItem.querySelector(`.${dragHandleClassName}`));
