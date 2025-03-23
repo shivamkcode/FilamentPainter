@@ -63,5 +63,17 @@ Print Instructions:
 Set base layer height to ${baseLayerHeight.value} mm and layer height to ${globalLayerHeightInput.value} mm.
 ${swapString}`;
         instructions.innerHTML = instructionString;
+        downloadTextFile("Filament Painter Instructions.txt", instructionString);
     });
+}
+function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

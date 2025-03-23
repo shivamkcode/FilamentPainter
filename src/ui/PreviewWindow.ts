@@ -34,10 +34,10 @@ export function setupPreviewWindow() {
             document.removeEventListener('mouseup', handleMouseUp);
         }
 
-        previewWindow.style.width = `50vw`;
+        previewWindow.style.width = `30vw`;
 
         window.addEventListener('resize', () => {
-            previewWindow.style.width = `50vw`;
+            previewWindow.style.width = `30vw`;
         });
     }
 }
