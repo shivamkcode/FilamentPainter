@@ -2,6 +2,7 @@ import {GLImage} from "../Image.js";
 import {GLComputeEngine} from "./Engine.js";
 import {HeightFunction} from "../../config/Paint.js";
 import {config} from "../../config/Config.js";
+import {Filament} from "../../Filament.js";
 
 // Fragment Shader
 function generateFragmentShader(heightFunction: string) {
@@ -237,16 +238,38 @@ export class GLComputeHeights extends GLComputeEngine {
             throw new Error("Framebuffer is not complete.");
         }
 
-        const colours = [
-            1.0, 1.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            1.0, 0.0, 0.0
-        ];
-        const heights = [0.8, 1.4, 1.9, 2.5, 2.6];
-        const opacities = [0.5, 0.5, 0.5, 0.5, 0.5];
-        const heightRange = [0.2, 2.6, 0.05];
+        let filaments: Filament[] = config.paint.filaments;
+
+        // const colours = [
+        //     1.0, 1.0, 1.0,
+        //     0.0, 0.0, 1.0,
+        //     0.0, 1.0, 0.0,
+        //     1.0, 1.0, 0.0,
+        //     1.0, 0.0, 0.0
+        // ];
+        // const heights = [0.8, 1.4, 1.9, 2.5, 2.6];
+        // const opacities = [0.5, 0.5, 0.5, 0.5, 0.5];
+        // const heightRange = [0.2, 2.6, 0.05];
+
+        const colours = [];
+        const heights = [];
+        const opacities = [];
+        let heightRange = [];
+
+        for (let i = 0; i < filaments.length; i++) {
+            let filament = filaments[i];
+            colours.push(filament.colour[0]);
+            colours.push(filament.colour[1]);
+            colours.push(filament.colour[2]);
+            heights.push(filament.endHeight);
+            opacities.push(filament.opacity);
+        }
+
+        heightRange = [config.paint.startHeight, config.paint.endHeight, config.paint.increment];
+
+        if (heights.length == 0) {
+            return new Float32Array();
+        }
 
         this.uploadComputeData(
             colours,

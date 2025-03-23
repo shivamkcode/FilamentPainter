@@ -62,5 +62,9 @@ export function getOpacity(r: number, g: number, b: number): number {
     // Perform trilinear interpolation
     const interpolated = trilinearInterpolation(interpValues, x, y, z);
 
-    return Math.round(interpolated * 100) / 100.0;
+    const clampedValue = Math.max(0.1, Math.min(interpolated, 1));
+
+    // Round the clamped value to 2 decimal places
+    return Math.round(clampedValue * 100) / 100.0;    // const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    // return 1 - luminance; // Adjust this formula as needed
 }

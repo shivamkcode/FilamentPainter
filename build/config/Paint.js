@@ -7,9 +7,26 @@ export var HeightFunction;
 ;
 export class PaintConfig {
     constructor() {
-        this._image = null;
+        this._image = new Image();
+        this._sourceImage = new Image();
         this._filaments = [];
         this._heightFunction = HeightFunction.NEAREST;
+        this._computedResult = new Float32Array();
+        this.startHeight = 0.2;
+        this.endHeight = 0.2;
+        this.increment = 0.08;
+    }
+    get sourceImage() {
+        return this._sourceImage;
+    }
+    set sourceImage(value) {
+        this._sourceImage = value;
+    }
+    get computedResult() {
+        return this._computedResult;
+    }
+    set computedResult(value) {
+        this._computedResult = value;
     }
     get heightFunction() {
         return this._heightFunction;

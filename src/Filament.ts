@@ -2,22 +2,27 @@ import {vec3} from "./Types.js";
 
 export class Filament {
     colour: vec3 = vec3(0, 0, 0);
-    startHeight: number = 0;
+    endHeight: number = 0;
     // Distance to opaque in mm
     opacity: number = 0;
+    name: string = '';
 
     /**
      * Creates a new Filament instance.
      * @param colour The color of the filament, either as an RGB array [r, g, b] (0-1 or 0-255) or a hex string (e.g., "#FF0000").
-     * @param startHeight The starting height of the filament.
+     * @param startHeight The ending height of the filament.
      * @param colorFormat Optional: Specify 'normalized' (0-1), 'byte' (0-255) for RGB array, or leave undefined for hex. Defaults to 'normalized' if color is an array.
      */
     constructor(
         colour: [number, number, number] | string,
-        startHeight: number,
+        endHeight: number,
+        name: string,
+        opacity: number,
         colorFormat: 'normalised' | 'byte' = 'normalised'
     ) {
-        this.startHeight = Math.floor(startHeight); // Ensure startHeight is an integer
+        this.endHeight = endHeight;
+        this.name = name;
+        this.opacity = opacity;
 
         if (Array.isArray(colour)) {
             let r = colour[0];
@@ -35,10 +40,6 @@ export class Filament {
             this.colour = this.hexToRgbNormalized(colour);
         } else {
             throw new Error("Invalid color format provided. Use RGB array or hex string.");
-        }
-
-        if (!Number.isInteger(this.startHeight)) {
-            console.warn("Start height should be an integer.");
         }
     }
 

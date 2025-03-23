@@ -3,152 +3,100 @@ import {handleImageUpload} from "./Upload.js";
 import {getComputeFunction, GLComputeHeights} from "./gl/compute/Heights.js";
 import {GLImage} from "./gl/Image.js";
 import {debugDisplayDataOutput, debugDisplayHTMLImage} from "./debug/DisplayImage.js";
-import {setupDragAndDrop} from './ui/Filaments.js';
+import {getFilamentListElements, setupDragAndDrop} from './ui/Filaments.js';
 import {setupHeightSelector} from "./ui/Heights.js";
 import {HeightFunction} from "./config/Paint.js";
 import {generateLargeHeightmap, generateSTLAndDownload, getHeights} from "./tools/HeightmapExport.js";
-
-function initGL() {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
-
-    if (!gl || !(gl instanceof WebGL2RenderingContext)) {
-        console.error('Unable to initialize WebGL. Your browser may not support it.');
-        throw new Error("Cannot initialise WebGL.")
-    } else {
-        config.compute.gl = gl;
-        config.compute.canvas = canvas;
-    }
-
-    // const ext1 = gl.getExtension('OES_texture_float');
-    const extension = gl.getExtension('EXT_color_buffer_float');
-    if (!extension) {
-        throw new Error('Required extensions not supported');
-    }
-}
+import {setupPreviewWindow} from "./ui/PreviewWindow.js";
+import {initGL} from "./gl/Init.js";
+import {autoUpdateImage, updateImage, updateOtherField} from "./ui/UpdateImage.js";
+import {setupExport} from "./ui/Export.js";
 
 initGL();
 
+// config.paint.image = new Image();
+//
+// config.paint.image.onload = () => {
+//     let comp = getComputeFunction(HeightFunction.NEAREST);
+//
+//     let image = new GLImage(config.paint.image);
+//
+//     let result = comp.compute(image);
+//
+//     debugDisplayDataOutput(result, image.width, image.height);
+//     debugDisplayHTMLImage(config.paint.image);
+//
+//
+//     setupHeightSelector(() => {
+//         let comp = getComputeFunction(config.paint.heightFunction);
+//         let result = comp.compute(image);
+//         debugDisplayDataOutput(result, image.width, image.height);
+//         debugDisplayHTMLImage(config.paint.image);
+//
+//         // let heights = getHeights(result, image.width, image.height);
+//         // console.log(heights);
+//         //
+//         // generateSTLAndDownload(heights);
+//
+//         // downloadSTL(stlString, `large_heightmap_scaled.stl`);
+//     });
+// }
 
-let img = new Image();
-img.onload = () => {
-    let comp = new GLComputeHeights(HeightFunction.NEAREST);
-
-    let image = new GLImage(img);
-
-    let result = comp.compute(image);
-
-    debugDisplayDataOutput(result, image.width, image.height);
-    debugDisplayHTMLImage(img);
 
 
-    setupHeightSelector(() => {
-        let comp = getComputeFunction(config.paint.heightFunction);
-        let result = comp.compute(image);
-        debugDisplayDataOutput(result, image.width, image.height);
-        debugDisplayHTMLImage(img);
 
-        // let heights = getHeights(result, image.width, image.height);
-        // console.log(heights);
-        //
-        // generateSTLAndDownload(heights);
 
-        // downloadSTL(stlString, `large_heightmap_scaled.stl`);
-    });
-}
 
-img.src = "./test.jpg"
-// img.src = "./white.png"
-
+const imageResolutionX = document.getElementById('image-resolution-x') as HTMLInputElement;
+const imageResolutionY = document.getElementById('image-resolution-y') as HTMLInputElement;
+const physicalXInput = document.getElementById('physical-x') as HTMLInputElement;
 
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
         console.error('Image upload error:', result.error);
     } else if (result.imageElement) {
-        console.log('Image element:', result.imageElement);
-        console.log('File:', result.file);
+        config.paint.image = result.imageElement;
+        config.paint.sourceImage = result.imageElement;
 
-        // document.body.appendChild(result.imageElement); // for preview.
+        imageResolutionX.value = `${config.paint.image.width}`;
+        imageResolutionY.value = `${config.paint.image.height}`;
+        physicalXInput.value = '100';
+        updateOtherField(physicalXInput);
+
+        updateImage();
     }
 });
 
 
-setupDragAndDrop({
-    listId: 'draggable-list',
-    addItemButtonId: 'add-item-button',
-    itemClassName: 'draggable-item',
-    dragHandleClassName: 'drag-handle',
-    newItemPrefix: 'Item'
-}, (list: HTMLUListElement) => {
-    console.log(list)
+setupPreviewWindow();
+setupHeightSelector();
+
+const baseLayerHeight = document.getElementById('base-layer-height-input') as HTMLInputElement;
+const endLayerHeight = document.getElementById('end-layer-height-label') as HTMLElement;
+
+baseLayerHeight.addEventListener('input', () => {
+    const filaments = getFilamentListElements();
+    let height = parseFloat(baseLayerHeight.value);
+    for (let i = 0; i < filaments.length; i++) {
+        height +=  filaments[i].layerHeight;
+    }
+    endLayerHeight.innerHTML = `End Height: ${height.toString()} mm`;
 });
 
-// ui/resize.ts
 
-const previewWindow = document.querySelector<HTMLElement>('.preview-window');
-const resizeHandle = document.querySelector<HTMLElement>('.resize-handle');
-
-if (previewWindow && resizeHandle) {
-    let isResizing = false;
-    let startX: number;
-    let startWidth: number;
-
-    resizeHandle.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        startX = e.clientX;
-        startWidth = previewWindow.offsetWidth;
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-        e.preventDefault();
-    });
-
-    function handleMouseMove(e: MouseEvent) {
-        if (!isResizing) return;
-        let newWidth = startWidth + (e.clientX - startX);
-        if (newWidth <= 200) {
-            newWidth = 200;
+document.addEventListener('DOMContentLoaded', () => {
+    setupDragAndDrop((list: HTMLUListElement) => {
+        const filaments = getFilamentListElements();
+        let height = parseFloat(baseLayerHeight.value);
+        for (let i = 0; i < filaments.length; i++) {
+            height += filaments[i].layerHeight;
         }
-        // @ts-ignore
-        previewWindow.style.width = `calc(${newWidth}px - 4rem)`;
-        // @ts-ignore
-        resizeHandle.style.right = '0px';
-    }
+        height = Math.round(height * 100) / 100;
+        endLayerHeight.innerHTML = `End Height: ${height.toString()} mm`;
 
-    function handleMouseUp() {
-        isResizing = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    }
-
-    previewWindow.style.width = `50vw`;
-
-    window.addEventListener('resize', () => {
-        previewWindow.style.width = `50vw`;
+        autoUpdateImage();
     });
-}
+});
 
+setupExport();
 
-
-
-// Example usage in a browser environment:
-// const largeHeightmapData = generateLargeHeightmap(50, 50); // Generate a 50x50 heightmap
-//
-// // Example with a scaling factor of 2
-// const scaleFactor = 0.5*(50/49);
-// const stlString = generateSTL(largeHeightmapData, "large_heightmap_scaled.stl", scaleFactor);
-//
-// // Function to trigger a file download in the browser
-// function downloadSTL(stlContent: string, filename: string) {
-//     const blob = new Blob([stlContent], { type: 'application/vnd.ms-stlascii' });
-//     const link = document.createElement('a');
-//     link.href = URL.createObjectURL(blob);
-//     link.download = filename;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//     URL.revokeObjectURL(link.href);
-// }
-
-// Trigger the download
-// downloadSTL(stlString, `large_heightmap_scaled_${scaleFactor}x.stl`);
-// console.log(`Large STL string with scaling factor of ${scaleFactor} initiated.`);

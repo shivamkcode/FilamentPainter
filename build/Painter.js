@@ -1,92 +1,51 @@
 import { config } from "./config/Config.js";
 import { handleImageUpload } from "./Upload.js";
-import { getComputeFunction, GLComputeHeights } from "./gl/compute/Heights.js";
-import { GLImage } from "./gl/Image.js";
-import { debugDisplayDataOutput, debugDisplayHTMLImage } from "./debug/DisplayImage.js";
-import { setupDragAndDrop } from './ui/Filaments.js';
+import { getFilamentListElements, setupDragAndDrop } from './ui/Filaments.js';
 import { setupHeightSelector } from "./ui/Heights.js";
-import { HeightFunction } from "./config/Paint.js";
-function initGL() {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
-    if (!gl || !(gl instanceof WebGL2RenderingContext)) {
-        console.error('Unable to initialize WebGL. Your browser may not support it.');
-        throw new Error("Cannot initialise WebGL.");
-    }
-    else {
-        config.compute.gl = gl;
-        config.compute.canvas = canvas;
-    }
-    const extension = gl.getExtension('EXT_color_buffer_float');
-    if (!extension) {
-        throw new Error('Required extensions not supported');
-    }
-}
+import { setupPreviewWindow } from "./ui/PreviewWindow.js";
+import { initGL } from "./gl/Init.js";
+import { autoUpdateImage, updateImage, updateOtherField } from "./ui/UpdateImage.js";
+import { setupExport } from "./ui/Export.js";
 initGL();
-let img = new Image();
-img.onload = () => {
-    let comp = new GLComputeHeights(HeightFunction.NEAREST);
-    let image = new GLImage(img);
-    let result = comp.compute(image);
-    debugDisplayDataOutput(result, image.width, image.height);
-    debugDisplayHTMLImage(img);
-    setupHeightSelector(() => {
-        let comp = getComputeFunction(config.paint.heightFunction);
-        let result = comp.compute(image);
-        debugDisplayDataOutput(result, image.width, image.height);
-        debugDisplayHTMLImage(img);
-    });
-};
-img.src = "./test.jpg";
+const imageResolutionX = document.getElementById('image-resolution-x');
+const imageResolutionY = document.getElementById('image-resolution-y');
+const physicalXInput = document.getElementById('physical-x');
 handleImageUpload('image-upload', (result) => {
     if (result.error) {
         console.error('Image upload error:', result.error);
     }
     else if (result.imageElement) {
-        console.log('Image element:', result.imageElement);
-        console.log('File:', result.file);
+        config.paint.image = result.imageElement;
+        config.paint.sourceImage = result.imageElement;
+        imageResolutionX.value = `${config.paint.image.width}`;
+        imageResolutionY.value = `${config.paint.image.height}`;
+        physicalXInput.value = '100';
+        updateOtherField(physicalXInput);
+        updateImage();
     }
 });
-setupDragAndDrop({
-    listId: 'draggable-list',
-    addItemButtonId: 'add-item-button',
-    itemClassName: 'draggable-item',
-    dragHandleClassName: 'drag-handle',
-    newItemPrefix: 'Item'
-}, (list) => {
-    console.log(list);
+setupPreviewWindow();
+setupHeightSelector();
+const baseLayerHeight = document.getElementById('base-layer-height-input');
+const endLayerHeight = document.getElementById('end-layer-height-label');
+baseLayerHeight.addEventListener('input', () => {
+    const filaments = getFilamentListElements();
+    let height = parseFloat(baseLayerHeight.value);
+    for (let i = 0; i < filaments.length; i++) {
+        height += filaments[i].layerHeight;
+    }
+    endLayerHeight.innerHTML = `End Height: ${height.toString()} mm`;
 });
-const previewWindow = document.querySelector('.preview-window');
-const resizeHandle = document.querySelector('.resize-handle');
-if (previewWindow && resizeHandle) {
-    let isResizing = false;
-    let startX;
-    let startWidth;
-    resizeHandle.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        startX = e.clientX;
-        startWidth = previewWindow.offsetWidth;
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-        e.preventDefault();
-    });
-    function handleMouseMove(e) {
-        if (!isResizing)
-            return;
-        let newWidth = startWidth + (e.clientX - startX);
-        if (newWidth <= 200) {
-            newWidth = 200;
+document.addEventListener('DOMContentLoaded', () => {
+    setupDragAndDrop((list) => {
+        const filaments = getFilamentListElements();
+        let height = parseFloat(baseLayerHeight.value);
+        for (let i = 0; i < filaments.length; i++) {
+            height += filaments[i].layerHeight;
         }
-        previewWindow.style.width = `calc(${newWidth}px - 4rem)`;
-        resizeHandle.style.right = '0px';
-    }
-    function handleMouseUp() {
-        isResizing = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    }
-    previewWindow.style.width = `50vw`;
-    window.addEventListener('resize', () => {
-        previewWindow.style.width = `50vw`;
+        height = Math.round(height * 100) / 100;
+        endLayerHeight.innerHTML = `End Height: ${height.toString()} mm`;
+        autoUpdateImage();
     });
-}
+});
+setupExport();

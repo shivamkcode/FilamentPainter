@@ -1,10 +1,13 @@
 import { vec3 } from "./Types.js";
 export class Filament {
-    constructor(colour, startHeight, colorFormat = 'normalised') {
+    constructor(colour, endHeight, name, opacity, colorFormat = 'normalised') {
         this.colour = vec3(0, 0, 0);
-        this.startHeight = 0;
+        this.endHeight = 0;
         this.opacity = 0;
-        this.startHeight = Math.floor(startHeight);
+        this.name = '';
+        this.endHeight = endHeight;
+        this.name = name;
+        this.opacity = opacity;
         if (Array.isArray(colour)) {
             let r = colour[0];
             let g = colour[1];
@@ -22,9 +25,6 @@ export class Filament {
         }
         else {
             throw new Error("Invalid color format provided. Use RGB array or hex string.");
-        }
-        if (!Number.isInteger(this.startHeight)) {
-            console.warn("Start height should be an integer.");
         }
     }
     hexToRgbNormalized(hex) {

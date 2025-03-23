@@ -39,5 +39,6 @@ export function getOpacity(r, g, b) {
     const y = g * (interpValues[0].length - 1);
     const z = b * (interpValues[0][0].length - 1);
     const interpolated = trilinearInterpolation(interpValues, x, y, z);
-    return Math.round(interpolated * 100) / 100.0;
+    const clampedValue = Math.max(0.1, Math.min(interpolated, 1));
+    return Math.round(clampedValue * 100) / 100.0;
 }
