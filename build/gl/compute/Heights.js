@@ -19,18 +19,23 @@ uniform vec2 resolution;
 in vec2 v_texCoord;
 out vec4 fragColor;
 
+float normalizedExponential(float x) {
+    float exp_neg_2x = exp(-2.0 * x);
+    float exp_neg_2 = exp(-2.0);  // Precompute e^{-2}
+    return (exp_neg_2x - exp_neg_2) / (1.0 - exp_neg_2);
+}
+
 vec3 interpolateColours(vec3 colourA, vec3 colourB, float t, float opaqueness) {
 
-    // Ensure t stays within valid range
-    t = clamp(t, 0.0, opaqueness);
-
-    // Compute the transmission factor using normalized exponential decay
-    float transmission = exp(-t / opaqueness);
+    float amountInterpolated = t / opaqueness;
+    if (amountInterpolated > 1.) {
+        amountInterpolated = 1.;
+    }
     
-    // Normalize so that when t = opaqueness, transmission becomes exactly 0
-    transmission = (transmission - exp(-1.0)) / (1.0 - exp(-1.0));
-
-    // Blend between colours based on transmission
+    // amountInterpolated in [0, 1]
+    // transform to exponential curve
+    float transmission = normalizedExponential(amountInterpolated);
+    
     return mix(colourB, colourA, transmission);
 }
 
