@@ -25,12 +25,17 @@ out vec4 fragColor;
 
 vec3 interpolateColours(vec3 colourA, vec3 colourB, float t, float opaqueness) {
 
-    float amountInterpolated = t / opaqueness;
-    if (amountInterpolated > 1.) {
-        amountInterpolated = 1.;
-    }
+    // Ensure t stays within valid range
+    t = clamp(t, 0.0, opaqueness);
+
+    // Compute the transmission factor using normalized exponential decay
+    float transmission = exp(-t / opaqueness);
     
-    return colourA + amountInterpolated * (colourB - colourA);
+    // Normalize so that when t = opaqueness, transmission becomes exactly 0
+    transmission = (transmission - exp(-1.0)) / (1.0 - exp(-1.0));
+
+    // Blend between colours based on transmission
+    return mix(colourB, colourA, transmission);
 }
 
 float getHeight(vec3 colour) {
