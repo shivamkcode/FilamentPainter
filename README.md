@@ -4,6 +4,11 @@ A free colour lithophane generator.
 
 Powered by WebGL2.
 
+## Running Locally
+
+- Download as zip or clone the repository
+- Drag `index.html` into a browser tab
+
 ## Directory Structure
 
 - `/src` contains the Typescript source code
