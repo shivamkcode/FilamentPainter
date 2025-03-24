@@ -70,7 +70,7 @@ export function setupExport() {
             if (i == 0) {
                 swapString += `- Begin with ${filament.name} as the first layer\n`;
             } else {
-                swapString += `- Swap to ${filament.name} at a layer height of ${Math.round(config.paint.filaments[i - 1].endHeight * 100) / 100} mm\n`;
+                swapString += `- Swap to ${filament.name} at a layer height of ${Math.round((config.paint.filaments[i - 1].endHeight + parseFloat(globalLayerHeightInput.value)) * 100) / 100} mm\n`;
             }
         }
 
