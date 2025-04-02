@@ -1,6 +1,6 @@
 # Filament Painter
 
-A free colour lithophane generator.
+A free colour lithophane generator hosted at https://painter.vec4.ca/ 
 
 Powered by WebGL2.
 
