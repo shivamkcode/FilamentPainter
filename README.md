@@ -6,8 +6,8 @@ Powered by WebGL2.
 
 ## Running Locally
 
-- Download as zip or clone the repository
-- Drag `index.html` into a browser tab
+- Download as zip or clone the repository.
+- Drag `index.html` into a browser tab.
 
 ## Directory Structure
 
