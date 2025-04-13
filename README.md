@@ -24,3 +24,5 @@ To determine the colour at a layer, a brute force method is used by starting fro
 Currently, the colour blending uses an exponential curve of (e^(-2x) - e^-2) / (1 - e^-2), which gives a pretty good approximation of how filament actually behaves. 
 
 Since everything is run on the GPU, this brute force computation runs relatively fast.
+
+![Screenshot 2025-04-13 at 13 04 20](https://github.com/user-attachments/assets/55c49b22-1024-4d0c-aaaa-86570f299b19)
