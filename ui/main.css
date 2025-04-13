@@ -24,8 +24,17 @@ header {
     background-color: #2e2e2e;
     color: #e0e0e0;
     padding: 0.5rem;
-    text-align: center;
     height: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+    flex-direction: row;
+}
+
+.page-header a {
+    color: #96c8fb;
+    text-decoration: none;
+    font-weight: normal;
 }
 
 .page-header h1 {
