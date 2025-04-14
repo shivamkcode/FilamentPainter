@@ -36,7 +36,6 @@ export function setupExport() {
         }
         let pixelScaleFactor = pixelX / (pixelX - 1);
         let sizeScaleFactor = parseFloat(detailSizeInput.value);
-        console.log(123123123123);
         let scaleFactor = pixelScaleFactor * sizeScaleFactor;
         generateSTLAndDownload(heights, 'filamentPainting.stl', scaleFactor);
         let filamentsUsed = getUniqueFilaments(config.paint.filaments);
