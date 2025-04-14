@@ -64,30 +64,29 @@ vec4 compute(vec2 uv) {
     for (int i = 0; i < 2000; i++) {
         currentHeight += heightRange[2];
 
-        if (currentHeight >= colourHeight - 0.00001) {
+        if (currentHeight > colourHeight) {
             break;
         }
         
         if (currentHeight < heights[0]) {
             continue;
         }
-        
 
-        if (currentHeight <= heights[index] + 0.00001) {
+        if (currentHeight < heights[index]) {
             if (index == 0) {
                 continue;
             }
         } else {
             index++;
             previousColour = currentColour;
-            previousHeight = currentHeight - heightRange[2];
+            previousHeight = currentHeight;
             
             if (index >= numIndices) {
                 break;
             }
         }
         
-        currentColour = interpolateColours(previousColour, colours[index],  currentHeight - previousHeight, opacities[index]);
+        currentColour = interpolateColours(previousColour, colours[index], currentHeight - previousHeight, opacities[index]);
     }
 
     
@@ -147,7 +146,7 @@ const nearestMatchHieight = `
             }
         }
         
-        currentColour = interpolateColours(previousColour, colours[index],  currentHeight - previousHeight, opacities[index]);
+        currentColour = interpolateColours(previousColour, colours[index], currentHeight - previousHeight, opacities[index]);
     
         if (distance(currentColour, colour) <= nearestColourDistance) {
             nearestHeight = currentHeight;
