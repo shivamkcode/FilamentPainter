@@ -64,15 +64,15 @@ vec4 compute(vec2 uv) {
     for (int i = 0; i < 2000; i++) {
         currentHeight += heightRange[2];
 
-        if (currentHeight > colourHeight) {
+        if (currentHeight > colourHeight + 0.000001) {
             break;
         }
         
-        if (currentHeight < heights[0]) {
+        if (currentHeight < heights[0] - 0.000001) {
             continue;
         }
 
-        if (currentHeight < heights[index]) {
+        if (currentHeight < heights[index] - 0.000001) {
             if (index == 0) {
                 continue;
             }
@@ -120,7 +120,7 @@ const nearestMatchHieight = `
     
     for (int i = 0; i < 2000; i++) {
         currentHeight += heightRange[2];
-        if (currentHeight < heights[0]) {
+        if (currentHeight < heights[0] - 0.000001) {
             if (distance(currentColour, colour) <= nearestColourDistance) {
                 nearestHeight = currentHeight;
                 nearestColourDistance = distance(currentColour, colour);
@@ -132,7 +132,7 @@ const nearestMatchHieight = `
             break;
         }
 
-        if (currentHeight < heights[index]) {
+        if (currentHeight < heights[index] - 0.000001) {
             if (index == 0) {
                 continue;
             }
