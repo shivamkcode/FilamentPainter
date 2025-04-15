@@ -39,6 +39,48 @@ vec3 interpolateColours(vec3 colourA, vec3 colourB, float t, float opaqueness) {
     return mix(colourB, colourA, transmission);
 }
 
+vec3 srgbToLinear(vec3 srgb) {
+    vec3 b = step(vec3(0.04045), srgb);
+    vec3 linearLow  = srgb / 12.92;
+    vec3 linearHigh = pow((srgb + 0.055) / 1.055, vec3(2.4));
+    return mix(linearLow, linearHigh, b);
+}
+
+vec3 linearToXyz(vec3 linearRGB) {
+    const mat3 rgb2xyz = mat3(
+        0.4124564, 0.3575761, 0.1804375,
+        0.2126729, 0.7151522, 0.0721750,
+        0.0193339, 0.1191920, 0.9503041
+    );
+    return rgb2xyz * linearRGB;
+}
+
+vec3 xyzToLab(vec3 xyz) {
+    // Reference white (D65)
+    const vec3 white = vec3(0.95047, 1.0, 1.08883);
+    vec3 ratio = xyz / white;
+
+    vec3 v;
+    for (int i = 0; i < 3; ++i) {
+        if (ratio[i] > 0.008856)
+            v[i] = pow(ratio[i], 1.0/3.0);
+        else
+            v[i] = (7.787 * ratio[i]) + (16.0 / 116.0);
+    }
+
+    float L = (116.0 * v.y) - 16.0;
+    float a = 500.0 * (v.x - v.y);
+    float b = 200.0 * (v.y - v.z);
+
+    return vec3(L, a, b);
+}
+
+vec3 srgbToLab(vec3 srgb) {
+    vec3 linearRGB = srgbToLinear(srgb);
+    vec3 xyz = linearToXyz(linearRGB);
+    return xyzToLab(xyz);
+}
+
 float getHeight(vec3 colour) {
     ${heightFunction}
     return height;
@@ -118,12 +160,16 @@ const nearestMatchHieight = `
     float nearestHeight = 0.;
     float nearestColourDistance = 100000.0;
     
+    // Convert to CIE LAB colour space
+    vec3 colourLab = srgbToLab(colour);
+    
     for (int i = 0; i < 2000; i++) {
         currentHeight += heightRange[2];
         if (currentHeight < heights[0] - 0.000001) {
-            if (distance(currentColour, colour) <= nearestColourDistance) {
+            vec3 currentColourLab = srgbToLab(currentColour);
+            if (distance(currentColourLab, colourLab) <= nearestColourDistance) {
                 nearestHeight = currentHeight;
-                nearestColourDistance = distance(currentColour, colour);
+                nearestColourDistance = distance(currentColourLab, colourLab);
             }
             continue;
         }
@@ -147,10 +193,10 @@ const nearestMatchHieight = `
         }
         
         currentColour = interpolateColours(previousColour, colours[index], currentHeight - previousHeight, opacities[index]);
-    
-        if (distance(currentColour, colour) <= nearestColourDistance) {
+        vec3 currentColourLab = srgbToLab(currentColour);
+        if (distance(currentColourLab, colourLab) <= nearestColourDistance) {
             nearestHeight = currentHeight;
-            nearestColourDistance = distance(currentColour, colour);
+            nearestColourDistance = distance(currentColourLab, colourLab);
         }
     }
     
