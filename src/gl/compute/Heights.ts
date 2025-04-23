@@ -4,7 +4,7 @@ import {HeightFunction} from "../../config/Paint.js";
 import {config} from "../../config/Config.js";
 import {Filament} from "../../Filament.js";
 
-// Fragment Shader
+
 function generateFragmentShader(heightFunction: string) {
     const fragmentShaderSource = `#version 300 es
 precision highp float;
@@ -210,7 +210,7 @@ const nearestMatchHieight = `
     float height = nearestHeight;
 `;
 
-// Vertex Shader (WebGL 2)
+
 const vertexShaderSource = `#version 300 es
 in vec2 a_position;
 out vec2 v_texCoord;
