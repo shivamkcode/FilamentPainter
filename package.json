@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "vercel-build": "npm run build"
   },
   "dependencies": {},
   "devDependencies": {
