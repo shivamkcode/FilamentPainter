@@ -1,11 +1,12 @@
 {
   "name": "Painter",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "description": "A modern web application for creating beautiful filament paintings using WebGL2",
+  "main": "build/Painter.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "postinstall": "npm run build"
   },
   "dependencies": {},
   "devDependencies": {
