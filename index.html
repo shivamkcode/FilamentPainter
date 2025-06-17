@@ -1,253 +1,624 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Create filament paintings with Filament Painter">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Create filament paintings with Filament Painter"
+    />
     <title>Filament Painter</title>
-    <link rel="icon" type="image/png" href="ui/favicon/favicon-96x96.png" sizes="96x96" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="ui/favicon/favicon-96x96.png"
+      sizes="96x96"
+    />
     <link rel="icon" type="image/svg+xml" href="ui/favicon/favicon.svg" />
     <link rel="shortcut icon" href="ui/favicon/favicon.ico" />
-    <link rel="stylesheet" href="ui/main.css">
-</head>
+    <link rel="stylesheet" href="ui/main.css" />
+  </head>
 
-<body>
+  <body>
     <header class="page-header">
-        <div><a href="https://github.com/hpnrep6/FilamentPainter" target="_blank">Github Repo</a></div>
-        <div class="h-gap"></div>
-        <div>Filament Painter</div>
-        <div class="h-gap"></div>
-        <h1>painter.vec4.ca</h1>
-        <div class="h-gap"></div>
-        <div><a href="https://www.youtube.com/watch?v=DBM5WOLuUQk" target="_blank">ℹ️ Click here for a tutorial on how to use this website</a></div>
+      <div class="page-header-title">Filament Painter</div>
+      <div class="page-header-links">
+        <a href="#how-to-use" id="how-to-use-link">How to Use</a>
+        <a href="https://github.com/hpnrep6/FilamentPainter" target="_blank"
+          >GitHub</a
+        >
+      </div>
     </header>
+
     <div class="container">
-        <aside class="config-sidebar">
-            <nav>
-                <h2>
-                    Import Options
-                </h2>
-                <div class="import-option-row">
-                    <label> Import Image: </label>
-                    <input id="image-upload" type="file" name="file" accept="image/*" class="image-input">
-                </div>
-                <div class="h-divider"></div>
-                <h2>
-                    Filament Options
-                </h2>
+      <div class="config-sidebar">
+        <h2>Import Options</h2>
+        <div class="import-option-row">
+          <label for="image-upload">Import Image:</label>
+          <input
+            id="image-upload"
+            type="file"
+            name="file"
+            accept="image/*"
+            class="image-input"
+          />
+        </div>
 
-                <div>
-                    <label for="height-option-selection">Topography Function: </label>
+        <div class="h-divider"></div>
 
-                    <select name="height-option" id="height-option-selection">
-                        <option value="nearest">Nearest Match</option>
-                        <option value="greyscale-luminance">Greyscale (Luminance)</option>
-                        <option value="greyscale-max">Greyscale (Max)</option>
-                        <option value="custom" disabled >Custom (In Development)</option>
-                    </select>
-                </div>
+        <h2>Filament Options</h2>
+        <div class="option-group">
+          <label for="height-option-selection">Topography Function:</label>
+          <select name="height-option" id="height-option-selection">
+            <option value="nearest">Nearest Match</option>
+            <option value="greyscale-luminance">Greyscale (Luminance)</option>
+            <option value="greyscale-max">Greyscale (Max)</option>
+            <option value="custom" disabled>Custom (In Development)</option>
+          </select>
+        </div>
 
+        <div class="option-group">
+          <label for="layer-height-input">Layer Height:</label>
+          <div class="row">
+            <input
+              class="input-number"
+              id="layer-height-input"
+              type="number"
+              step="0.01"
+              value="0.08"
+            />
+            mm
+          </div>
+        </div>
 
-                <div>
-                    <label>Layer height: </label>
-                    <input class="input-number" id="layer-height-input" type="number" step="0.01" value="0.08"/> mm
-                </div>
+        <div class="option-group">
+          <label for="base-layer-height-input">Base Layer Height:</label>
+          <div class="row">
+            <input
+              class="input-number"
+              id="base-layer-height-input"
+              type="number"
+              step="0.01"
+              value="0.2"
+            />
+            mm
+          </div>
+        </div>
 
-                <div>
-                    <label>Base layer height: </label>
-                    <input class="input-number" id="base-layer-height-input" type="number" step="0.01" value="0.2"/> mm
-                </div>
-                <div class="h-divider"></div>
-                <h3>
-                    Add New Filament Layer
-                </h3>
+        <div class="h-divider"></div>
 
-                <ul>
-                    <li class="filament-list-item">
-                        <span>Create New Filament</span>
-                        <div class="row">
-                            <span>Name: <input type="text" value="Filament 1"/></span>
-                        </div>
-                        <div class="row">
-                            <span>Colour: <input type="color"/> <input type="text" placeholder="Hex Code"/></span>
-                        </div>
-                        <div class="row">
-                            <span>Opacity: <input type="number" step="0.01" min="0" max="5" value="0.1"/> mm</span>
-                        </div>
-                        <button class="filament-add-button" id="add-item-button-new">Add Filament Layer</button>
-                    </li>
-
-                    <li class="filament-list-item">
-                        <span>Choose Existing Filament</span>
-                        <select id="existing-filament-selection">
-                            <option value="None">Choose an existing filament</option>
-                        </select>
-                        <button class="filament-add-button"  id="add-item-button-existing">Add Filament Layer</button>
-                    </li>
-                </ul>
-
-                <div class="h-divider">
-                </div>
-                <h3>Layers</h3>
-
-                <div class="row filament-list-item" id="end-layer-height-label">
-                    End height: 0.2 mm
-                </div>
-                <ul class="draggable-list" id="draggable-list">
-<!--                    <li class="draggable-item">-->
-<!--                        <div class="drag-handle">-->
-<!--                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">-->
-<!--                                <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>-->
-<!--                            </svg>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <span>Name: <input type="text" value="Filament 1" readonly/></span>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            Colour: <div class="h-gap-small"></div> <input type="color" disabled/>-->
-<!--                            <div class="h-gap"></div>-->
-<!--                            Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5"/>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            Layer Height:-->
-<!--                            <div class="h-gap-small"></div>-->
-<!--                            <input type="range" min="0.01" max="1" step="0.01" value="0.2">-->
-<!--                            <div class="h-gap"></div>-->
-<!--                            <input type="number" min="0.01" max="1" step="0.01" value="0.2">-->
-<!--                            <div class="h-gap-small"></div> mm-->
-<!--                        </div>-->
-<!--                    </li>-->
-<!--                    <li class="draggable-item">-->
-<!--                        <div class="drag-handle">-->
-<!--                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">-->
-<!--                                <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>-->
-<!--                            </svg>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <span>Name: <input type="text" value="Filament 1" readonly/></span>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            Colour: <div class="h-gap-small"></div> <input type="color" disabled/>-->
-<!--                            <div class="h-gap"></div>-->
-<!--                            Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5"/>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            Layer Height:-->
-<!--                            <div class="h-gap-small"></div>-->
-<!--                            <input type="range" min="0.01" max="1" step="0.01" value="0.2">-->
-<!--                            <div class="h-gap"></div>-->
-<!--                            <input type="number" min="0.01" max="1" step="0.01" value="0.2">-->
-<!--                            <div class="h-gap-small"></div> mm-->
-<!--                        </div>-->
-<!--                    </li>-->
-                </ul>
-                <div class="row filament-list-item">
-                    Build Plate: 0 mm
-                </div>
-
-                <div class="h-divider"></div>
-                <h3>
-                    Library
-                </h3>
-
-                <ul id="existing-filament-list">
-<!--                    <li class="filament-list-item">-->
-<!--                        <span>Filament 1</span>-->
-<!--                        <div class="row">-->
-<!--                            <span>Title: <input type="text" value="Filament 1"/></span>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <span>Color: <input type="color"/> <input type="text" placeholder="Hex Code"/></span>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <span>Opacity: <input type="number" step="0.01" min="0" max="1"/> mm</span>-->
-<!--                        </div>-->
-<!--                    </li>-->
-<!--                    <li class="filament-list-item">-->
-<!--                        <span>Filament 1</span>-->
-<!--                        <div class="row">-->
-<!--                            <span>Title: <input type="text" value="Filament 1"/></span>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <span>Color: <input type="color"/> <input type="text" placeholder="Hex Code"/></span>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <span>Opacity: <input type="number" step="0.01" min="0" max="1"/> mm</span>-->
-<!--                        </div>-->
-<!--                    </li>-->
-                </ul>
-
-                <button id="update-painting-button">Update Painting</button>
-                <div>
-                    <input type="checkbox" checked id="auto-update-checkbox"/>
-                    Automatically Update Painting
-                </div>
-
-                <div class="h-divider"></div>
-                <h2>
-                    Export Options
-                </h2>
-
-                <div>
-                    <label>Image Resolution:</label>
-                    w <input class="input-number" type="number" id="image-resolution-x" readonly/> px by h <input class="input-number" type="number" id="image-resolution-y" readonly/> px
-                </div>
-
-                <div class="row">
-                    <label>Detail Size: </label>
-                    <div class="h-gap-small"></div>
-                    <input class="input-number" type="number" step="0.05" value="0.2" min="0.05" id="detail-size"/>
-                    <div class="h-gap-small"></div>
-                    mm
-                </div>
-
-
-                <div>
-                    <label>Physical Size:</label>
-                    w <input class="input-number" type="number" id="physical-x" min="1"/> mm by h <input class="input-number" type="number" id="physical-y" min="1"/> mm
-                </div>
-
-                <span id="file-size-estimate">
-                    Estimated File Size:
-                </span>
-
-                <div class="inline-div">
-                    <h3>Print Instructions</h3>
-<!--                    <select name="language-option" id="language-option-selection">-->
-<!--                        <option value="nearest">English</option>-->
-<!--                        <option value="greyscale-luminance">Greyscale (Luminance)</option>-->
-<!--                        <option value="greyscale-max">Greyscale (Max)</option>-->
-<!--                        <option value="custom" disabled >Custom (In Development)</option>-->
-<!--                    </select>-->
-                </div>
-                <textarea id="instructions" rows="30"></textarea>
-
-                ℹ️ Notice: This software is only free for non-commercial use.
-                <br></br>
-                If you would like to purchase a commercial license, click the button below.
-                <button id="buy-commercial">Buy Commercial License ($20)</button>
-                <button id="export-stl">Export as STL</button>
-                <button disabled>Export as Project (In Development)</button>
-                <br></br>
-                <a href="https://github.com/hpnrep6/FilamentPainter" target="_blank">Check out the source code on GitHub.</a>
-                <a href="https://www.reddit.com/r/FilamentPainter" target="_blank">Join the Filament Painter subreddit.</a>
-                <a>For any inquiries, please contact: hpnrep9@gmail.com</a>
-                <div class="h-gap"></div>
-                <div class="h-gap"></div>
-            </nav>
-        </aside>
-        <main class="preview-window">
-            <canvas id="canvas-preview" class="preview-canvas"></canvas>
-            <canvas id="canvas-source" class="preview-canvas"></canvas>
-            <div>
-                <h2></h2>
+        <h3>Add New Filament Layer</h3>
+        <ul>
+          <li class="filament-list-item">
+            <span>Create New Filament</span>
+            <div class="row">
+              <label>Name:</label>
+              <input type="text" value="Filament 1" />
             </div>
-            <div class="resize-handle">Drag to Resize</div>
-        </main>
+            <div class="row">
+              <label>Color:</label>
+              <input type="color" />
+              <input type="text" placeholder="Hex Code" />
+            </div>
+            <div class="row">
+              <label>Opacity:</label>
+              <input type="number" step="0.01" min="0" max="5" value="0.1" /> mm
+            </div>
+            <button class="filament-add-button" id="add-item-button-new">
+              Add Filament Layer
+            </button>
+          </li>
+
+          <li class="filament-list-item">
+            <span>Choose Existing Filament</span>
+            <div class="row">
+              <select id="existing-filament-selection">
+                <option value="None">Choose an existing filament</option>
+              </select>
+            </div>
+            <button class="filament-add-button" id="add-item-button-existing">
+              Add Filament Layer
+            </button>
+          </li>
+        </ul>
+
+        <div class="h-divider"></div>
+
+        <h3>Layers</h3>
+        <div class="row filament-list-item" id="end-layer-height-label">
+          End Height: 0.2 mm
+        </div>
+        <ul class="draggable-list" id="draggable-list">
+          <!-- Dynamic filament layers will be added here -->
+        </ul>
+        <div class="row filament-list-item">Build Plate: 0 mm</div>
+
+        <div class="h-divider"></div>
+
+        <h3>Library</h3>
+        <ul id="existing-filament-list">
+          <!-- Dynamic filament library items will be added here -->
+        </ul>
+
+        <div class="h-divider"></div>
+
+        <h3>Painting Controls</h3>
+        <button id="update-painting-button">Update Painting</button>
+        <div class="checkbox-group">
+          <input type="checkbox" checked id="auto-update-checkbox" />
+          <label for="auto-update-checkbox"
+            >Automatically Update Painting</label
+          >
+        </div>
+
+        <div class="h-divider"></div>
+
+        <h3>Save/Load Filaments</h3>
+        <div class="button-group">
+          <button id="save-filaments-button" class="filament-add-button">
+            💾 Save Filaments
+          </button>
+          <button id="load-filaments-button" class="filament-add-button">
+            📂 Load Filaments
+          </button>
+          <button id="clear-filaments-button" class="filament-add-button">
+            🗑️ Clear Saved
+          </button>
+        </div>
+        <div id="save-status" class="status-message">
+          No filaments saved yet
+        </div>
+      </div>
+
+      <main class="preview-window">
+        <canvas id="canvas-preview" class="preview-canvas"></canvas>
+        <canvas
+          id="canvas-source"
+          class="preview-canvas margin-bottom"
+        ></canvas>
+      </main>
+    </div>
+
+    <div class="export-options">
+      <div class="h-divider"></div>
+
+      <h2>Export Options</h2>
+      <div class="option-group">
+        <label>Image Resolution:</label>
+        <div class="row-item">
+          <span>W:</span>
+          <input
+            class="input-number"
+            type="number"
+            id="image-resolution-x"
+            readonly
+          />
+          px
+        </div>
+        <div class="row-item">
+          <span>H:</span>
+          <input
+            class="input-number"
+            type="number"
+            id="image-resolution-y"
+            readonly
+          />
+          px
+        </div>
+        <label for="detail-size">Detail Size:</label>
+        <div class="row-item">
+          <input
+            class="input-number"
+            type="number"
+            step="0.05"
+            value="0.2"
+            min="0.05"
+            id="detail-size"
+          />
+          <span>mm</span>
+        </div>
+        <label>Physical Size:</label>
+        <div class="row-item">
+          <span>W:</span>
+          <input class="input-number" type="number" id="physical-x" min="1" />
+          mm
+        </div>
+        <div class="row-item">
+          <span>H:</span>
+          <input class="input-number" type="number" id="physical-y" min="1" />
+          mm
+        </div>
+      </div>
+
+      <div class="file-size-info">
+        <span id="file-size-estimate">Estimated File Size: --</span>
+      </div>
+
+      <div class="h-divider"></div>
+
+      <div style="width: 60%">
+        <h3>Print Instructions</h3>
+        <textarea
+          id="instructions"
+          rows="15"
+          disabled
+          placeholder="Print instructions will appear here..."
+        ></textarea>
+      </div>
+
+      <div class="h-divider"></div>
+
+      <div class="button-group">
+        <button id="export-stl">Export as STL</button>
+        <button id="export-project-btn">Export as Project</button>
+        <button id="import-project-btn">Import Project</button>
+      </div>
+
+      <div class="h-divider"></div>
+
+      <div class="footer-links">
+        <a href="https://github.com/hpnrep6/FilamentPainter" target="_blank"
+          >📁 Source Code on GitHub</a
+        >
+        <a href="https://www.heyshivam.tech/" target="_blank"
+          >💬 Visit My Portfolio</a
+        >
+        <a href="mailto:shivambaniya1@gmail.com"
+          >📧 Contact: shivambaniya1@gmail.com</a
+        >
+      </div>
+    </div>
+
+    <!-- How to Use Modal -->
+    <div id="how-to-use-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🎨 How to Use Filament Painter</h2>
+          <span class="close-modal">&times;</span>
+        </div>
+
+        <div class="modal-body">
+          <div class="how-to-section">
+            <h3>📋 Quick Start Guide</h3>
+            <p>
+              Filament Painter helps you create beautiful 3D filament paintings
+              from images. Follow these steps to get started:
+            </p>
+
+            <div class="step-container">
+              <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <h4>Upload Your Image</h4>
+                  <p>
+                    Click "Choose File" in the Import Options section and select
+                    an image. This will be your reference for creating the
+                    filament painting.
+                  </p>
+                  <div class="tip">
+                    <strong>💡 Tip:</strong> Use high-contrast images for best
+                    results. Black and white images work particularly well.
+                  </div>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <h4>Configure Settings</h4>
+                  <p>
+                    Adjust the basic settings in the Filament Options section:
+                  </p>
+                  <ul>
+                    <li>
+                      <strong>Topography Function:</strong> Choose how the app
+                      interprets your image (Nearest Match is usually best)
+                    </li>
+                    <li>
+                      <strong>Layer Height:</strong> Set the thickness of each
+                      filament layer (typically 0.08-0.2mm)
+                    </li>
+                    <li>
+                      <strong>Base Layer Height:</strong> Set the height of the
+                      base layer (usually 0.2mm)
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <h4>Add Filament Layers</h4>
+                  <p>
+                    Create your filament layers in the "Add New Filament Layer"
+                    section:
+                  </p>
+                  <ul>
+                    <li>
+                      <strong>Create New:</strong> Add a custom filament with
+                      your own name, color, and opacity
+                    </li>
+                    <li>
+                      <strong>Choose Existing:</strong> Select from previously
+                      created filaments
+                    </li>
+                  </ul>
+                  <div class="tip">
+                    <strong>💡 Tip:</strong> Start with 3-5 layers for simple
+                    images, or 8-12 layers for complex designs.
+                  </div>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                  <h4>Preview and Adjust</h4>
+                  <p>
+                    Your painting will automatically update in the preview
+                    window. You can:
+                  </p>
+                  <ul>
+                    <li>Drag layers to reorder them</li>
+                    <li>Adjust colors, opacity, and layer heights</li>
+                    <li>See the total height calculation in real-time</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                  <h4>Export Your Project</h4>
+                  <p>When you're happy with your design:</p>
+                  <ul>
+                    <li>
+                      <strong>Export as STL:</strong> Download a 3D file for 3D
+                      printing
+                    </li>
+                    <li>
+                      <strong>Export as Project:</strong> Save your complete
+                      project for later editing
+                    </li>
+                    <li>
+                      <strong>Import Project:</strong> Load previously saved
+                      projects
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="how-to-section">
+            <h3>🎛️ Detailed Controls</h3>
+
+            <div class="control-group">
+              <h4>📁 Import Options</h4>
+              <p>
+                <strong>Import Image:</strong> Upload any image file (JPG, PNG,
+                etc.). The app will convert it to grayscale and use it as a
+                height map for your filament painting.
+              </p>
+            </div>
+
+            <div class="control-group">
+              <h4>⚙️ Filament Options</h4>
+              <ul>
+                <li>
+                  <strong>Topography Function:</strong>
+                  <ul>
+                    <li>
+                      <em>Nearest Match:</em> Uses the closest pixel value
+                      (fastest, good for most images)
+                    </li>
+                    <li>
+                      <em>Greyscale (Luminance):</em> Converts to grayscale
+                      using luminance formula
+                    </li>
+                    <li>
+                      <em>Greyscale (Max):</em> Uses the maximum RGB value for
+                      each pixel
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Layer Height:</strong> The thickness of each filament
+                  layer in millimeters
+                </li>
+                <li>
+                  <strong>Base Layer Height:</strong> The height of the
+                  bottom/base layer
+                </li>
+              </ul>
+            </div>
+
+            <div class="control-group">
+              <h4>🎨 Filament Layers</h4>
+              <p>
+                Each filament layer represents a different color or material in
+                your final print:
+              </p>
+              <ul>
+                <li>
+                  <strong>Name:</strong> Give your filament a descriptive name
+                  (e.g., "Red PLA", "Blue PETG")
+                </li>
+                <li>
+                  <strong>Color:</strong> Choose the color that matches your
+                  actual filament
+                </li>
+                <li>
+                  <strong>Opacity:</strong> Controls how much of this filament
+                  is used (0.1-5.0mm)
+                </li>
+                <li>
+                  <strong>Layer Height:</strong> Individual layer height for
+                  this filament
+                </li>
+              </ul>
+              <div class="tip">
+                <strong>💡 Pro Tip:</strong> Use higher opacity values for
+                darker areas of your image, lower values for lighter areas.
+              </div>
+            </div>
+
+            <div class="control-group">
+              <h4>💾 Save/Load Features</h4>
+              <ul>
+                <li>
+                  <strong>Auto-save:</strong> Your filaments are automatically
+                  saved as you work
+                </li>
+                <li>
+                  <strong>Manual Save:</strong> Explicitly save your current
+                  filament configuration
+                </li>
+                <li>
+                  <strong>Load:</strong> Restore previously saved filaments
+                </li>
+                <li>
+                  <strong>Clear:</strong> Remove all saved data (with
+                  confirmation)
+                </li>
+              </ul>
+            </div>
+
+            <div class="control-group">
+              <h4>📤 Export Options</h4>
+              <ul>
+                <li>
+                  <strong>Image Resolution:</strong> Shows the dimensions of
+                  your source image
+                </li>
+                <li>
+                  <strong>Detail Size:</strong> Controls the level of detail in
+                  your 3D model
+                </li>
+                <li>
+                  <strong>Physical Size:</strong> Set the actual dimensions of
+                  your printed object
+                </li>
+                <li>
+                  <strong>Print Instructions:</strong> Automatically generated
+                  instructions for your 3D printer
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="how-to-section">
+            <h3>🎯 Best Practices & Examples</h3>
+
+            <div class="example-group">
+              <h4>🌅 Landscape Example</h4>
+              <p><strong>Image:</strong> A sunset landscape with mountains</p>
+              <p><strong>Recommended Setup:</strong></p>
+              <ul>
+                <li>5-8 filament layers</li>
+                <li>Use warm colors (red, orange, yellow) for the sky</li>
+                <li>Use cool colors (blue, purple) for mountains</li>
+                <li>Higher opacity for darker areas (mountains, shadows)</li>
+                <li>Lower opacity for bright areas (sky, highlights)</li>
+              </ul>
+            </div>
+
+            <div class="example-group">
+              <h4>👤 Portrait Example</h4>
+              <p><strong>Image:</strong> A black and white portrait</p>
+              <p><strong>Recommended Setup:</strong></p>
+              <ul>
+                <li>8-12 filament layers for detail</li>
+                <li>Use skin tone colors (beige, tan, brown)</li>
+                <li>Use darker colors for shadows and hair</li>
+                <li>Very low opacity for highlights</li>
+                <li>Higher opacity for dark areas</li>
+              </ul>
+            </div>
+
+            <div class="example-group">
+              <h4>🎨 Abstract Art Example</h4>
+              <p><strong>Image:</strong> Colorful abstract design</p>
+              <p><strong>Recommended Setup:</strong></p>
+              <ul>
+                <li>10-15 filament layers for complexity</li>
+                <li>Match colors exactly to your available filaments</li>
+                <li>Vary opacity based on image brightness</li>
+                <li>Use complementary colors for visual interest</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="how-to-section">
+            <h3>🔧 Troubleshooting</h3>
+
+            <div class="troubleshoot-group">
+              <h4>Common Issues & Solutions</h4>
+
+              <div class="issue">
+                <h5>❌ Image not loading</h5>
+                <p>
+                  <strong>Solution:</strong> Make sure you're using a supported
+                  image format (JPG, PNG, GIF, etc.)
+                </p>
+              </div>
+
+              <div class="issue">
+                <h5>❌ Preview not updating</h5>
+                <p>
+                  <strong>Solution:</strong> Check that "Automatically Update
+                  Painting" is enabled, or click "Update Painting" manually
+                </p>
+              </div>
+
+              <div class="issue">
+                <h5>❌ Layers not appearing</h5>
+                <p>
+                  <strong>Solution:</strong> Make sure you've added filament
+                  layers and they have opacity values greater than 0
+                </p>
+              </div>
+
+              <div class="issue">
+                <h5>❌ Export not working</h5>
+                <p>
+                  <strong>Solution:</strong> Ensure you have an image loaded and
+                  at least one filament layer created
+                </p>
+              </div>
+
+              <div class="issue">
+                <h5>❌ Saved filaments not loading</h5>
+                <p>
+                  <strong>Solution:</strong> Check that localStorage is enabled
+                  in your browser and you have saved filaments
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="how-to-section">
+            <h3>📱 Mobile Usage</h3>
+            <p>
+              Filament Painter works great on mobile devices! The interface
+              automatically adapts to smaller screens:
+            </p>
+            <ul>
+              <li>Touch-friendly controls and buttons</li>
+              <li>Responsive layout that works on all screen sizes</li>
+              <li>Optimized for both portrait and landscape orientations</li>
+              <li>Easy file upload from your device's gallery</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="close-modal-btn">Got it! Close</button>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="build/Painter.js"></script>
-</body>
-
+  </body>
 </html>

@@ -1,4 +1,5 @@
 import { getOpacity } from "../tools/AutoOpacity.js";
+import { LocalStorageService } from "../services/LocalStorage.js";
 export function getFilamentListElements() {
     const draggableList = document.getElementById('draggable-list');
     if (!draggableList) {
@@ -58,7 +59,7 @@ export function setupDragAndDrop(callback) {
             }
         });
     };
-    draggableList.querySelectorAll(`.${dragHandleClassName}`).forEach(attachDragHandlers);
+    Array.from(draggableList.querySelectorAll(`.${dragHandleClassName}`)).forEach(el => attachDragHandlers(el));
     draggableList.addEventListener('dragend', (e) => {
         if (draggedItem) {
             draggedItem.classList.remove('dragging');
@@ -152,7 +153,9 @@ export function setupDragAndDrop(callback) {
             const min = parseFloat(target.min) || 0;
             const max = parseFloat(target.max) || Infinity;
             newValue = Math.max(min, Math.min(newValue, max));
-            updateLayerHeight(layerItem, newValue);
+            if (layerItem instanceof HTMLElement) {
+                updateLayerHeight(layerItem, newValue);
+            }
             callback(draggableList);
         }
     };
@@ -207,111 +210,119 @@ export function setupDragAndDrop(callback) {
         }
     };
     {
-        const newNameInput = document.querySelector('#add-item-button-new').parentElement?.querySelector('input[type="text"]');
-        const newColorInput = document.querySelector('#add-item-button-new').parentElement?.querySelector('input[type="color"]');
-        const newHexInput = document.querySelector('#add-item-button-new').parentElement?.querySelector('input[type="text"][placeholder="Hex Code"]');
-        const newOpacityInput = document.querySelector('#add-item-button-new').parentElement?.querySelectorAll('input[type="number"]')[0];
-        if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
-            newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
-            newColorInput.value = '#000000';
-            newHexInput.value = '#000000';
-            newOpacityInput.value = '0.10';
-            newColorInput.addEventListener('input', () => {
-                newHexInput.value = newColorInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
-            newHexInput.addEventListener('input', () => {
-                newColorInput.value = newHexInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
+        const addItemButtonNewElem = document.querySelector('#add-item-button-new');
+        const parentNew = addItemButtonNewElem?.parentElement;
+        if (parentNew) {
+            const newNameInput = parentNew.querySelector('input[type="text"]');
+            const newColorInput = parentNew.querySelector('input[type="color"]');
+            const newHexInput = parentNew.querySelector('input[type="text"][placeholder="Hex Code"]');
+            const newOpacityInput = parentNew.querySelectorAll('input[type="number"]')[0];
+            if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
+                newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
+                newColorInput.value = '#000000';
+                newHexInput.value = '#000000';
+                newOpacityInput.value = '0.10';
+                newColorInput.addEventListener('input', () => {
+                    newHexInput.value = newColorInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+                newHexInput.addEventListener('input', () => {
+                    newColorInput.value = newHexInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+            }
         }
     }
     addItemButtonNew.addEventListener('click', () => {
-        const newNameInput = document.querySelector('#add-item-button-new').parentElement?.querySelector('input[type="text"]');
-        const newColorInput = document.querySelector('#add-item-button-new').parentElement?.querySelector('input[type="color"]');
-        const newHexInput = document.querySelector('#add-item-button-new').parentElement?.querySelector('input[type="text"][placeholder="Hex Code"]');
-        const newOpacityInput = document.querySelector('#add-item-button-new').parentElement?.querySelectorAll('input[type="number"]')[0];
-        if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
-            const newFilamentName = newNameInput.value;
-            const newFilamentColor = newColorInput.value;
-            const filamentId = `filament-${filamentIdCounter++}`;
-            const initialLayerHeight = parseFloat(globalLayerHeightInput.value) || 0.08;
-            if (!newFilamentColor) {
-                alert("Please select a color for the new filament.");
-                return;
-            }
-            const newLayerItem = document.createElement('li');
-            newLayerItem.classList.add(itemClassName);
-            newLayerItem.dataset.id = filamentId;
-            newLayerItem.innerHTML = `
-                <div class="${dragHandleClassName}">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>
-                    </svg>
-                </div>
-                <div class="row">
-                    <span>Name: <input type="text" value="${newFilamentName}" readonly/></span>
-                </div>
-                <div class="row">
-                    Colour: <div class="h-gap-small"></div> <input type="color" value="${newFilamentColor}" disabled/>
-                    <div class="h-gap"></div>
-                    Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5" value="${newOpacityInput.value}" class="filament-layer-opacity" readonly/>
-                </div>
-                <div class="row">
-                    Layer Height:
-                    <div class="h-gap-small"></div>
-                    <input type="range" min="0.00" max="2" step="${globalLayerHeightInput.value}" value="${initialLayerHeight}" class="layer-height-slider">
-                    <div class="h-gap"></div>
-                    <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
-                    <div class="h-gap-small"></div> mm
-                </div>
-                <button class="delete-layer-button">Delete</button>
-            `;
-            draggableList.appendChild(newLayerItem);
-            attachDragHandlers(newLayerItem.querySelector(`.${dragHandleClassName}`));
-            newLayerItem.querySelector('.layer-height-slider')?.addEventListener('input', handleLayerHeightChange);
-            newLayerItem.querySelector('.layer-height-number')?.addEventListener('change', handleLayerHeightChange);
-            newLayerItem.querySelector('.delete-layer-button')?.addEventListener('click', (event) => {
-                const layerToRemove = event.target.closest(`.${itemClassName}`);
-                if (layerToRemove) {
-                    deleteFilamentLayer(layerToRemove);
+        const addItemButtonNewElem = document.querySelector('#add-item-button-new');
+        const parentNew = addItemButtonNewElem?.parentElement;
+        if (parentNew) {
+            const newNameInput = parentNew.querySelector('input[type="text"]');
+            const newColorInput = parentNew.querySelector('input[type="color"]');
+            const newHexInput = parentNew.querySelector('input[type="text"][placeholder="Hex Code"]');
+            const newOpacityInput = parentNew.querySelectorAll('input[type="number"]')[0];
+            if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
+                const newFilamentName = newNameInput.value;
+                const newFilamentColor = newColorInput.value;
+                const filamentId = `filament-${filamentIdCounter++}`;
+                const initialLayerHeight = parseFloat(globalLayerHeightInput.value) || 0.08;
+                if (!newFilamentColor) {
+                    alert("Please select a color for the new filament.");
+                    return;
                 }
-            });
-            updateSliderSteps();
-            const newFilamentListItem = document.createElement('li');
-            newFilamentListItem.classList.add('filament-list-item');
-            newFilamentListItem.dataset.id = filamentId;
-            newFilamentListItem.innerHTML = `
-                <span>${newFilamentName}</span>
-                <div class="row">
-                    <span>Name: <input type="text" value="${newFilamentName}"/></span>
-                </div>
-                <div class="row">
-                    <span>Color: <input type="color" value="${newFilamentColor}"/> <input type="text" placeholder="Hex Code" value="${newFilamentColor}"/></span>
-                </div>
-                <div class="row">
-                    <span>Opacity: <input type="number" step="0.01" min="0" max="1" value="${newOpacityInput.value}"/> mm</span>
-                </div>
-            `;
-            filamentList.appendChild(newFilamentListItem);
-            const newOption = document.createElement('option');
-            newOption.value = newFilamentName;
-            newOption.textContent = newFilamentName;
-            newOption.dataset.id = filamentId;
-            existingFilamentSelection.appendChild(newOption);
-            newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
-            newColorInput.value = '#000000';
-            newHexInput.value = '#000000';
-            newOpacityInput.value = '0.10';
-            newColorInput.addEventListener('input', () => {
-                newHexInput.value = newColorInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
-            newHexInput.addEventListener('input', () => {
-                newColorInput.value = newHexInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
-            callback(draggableList);
+                const newLayerItem = document.createElement('li');
+                newLayerItem.classList.add(itemClassName);
+                newLayerItem.dataset.id = filamentId;
+                newLayerItem.innerHTML = `
+                    <div class="${dragHandleClassName}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="row">
+                        <span>Name: <input type="text" value="${newFilamentName}" readonly/></span>
+                    </div>
+                    <div class="row">
+                        Colour: <div class="h-gap-small"></div> <input type="color" value="${newFilamentColor}" disabled/>
+                        <div class="h-gap"></div>
+                        Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5" value="${newOpacityInput.value}" class="filament-layer-opacity" readonly/>
+                    </div>
+                    <div class="row">
+                        Layer Height:
+                        <div class="h-gap-small"></div>
+                        <input type="range" min="0.00" max="2" step="${globalLayerHeightInput.value}" value="${initialLayerHeight}" class="layer-height-slider">
+                        <div class="h-gap"></div>
+                        <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
+                        <div class="h-gap-small"></div> mm
+                    </div>
+                    <button class="delete-layer-button">Delete</button>
+                `;
+                draggableList.appendChild(newLayerItem);
+                attachDragHandlers(newLayerItem.querySelector(`.${dragHandleClassName}`));
+                newLayerItem.querySelector('.layer-height-slider')?.addEventListener('input', handleLayerHeightChange);
+                newLayerItem.querySelector('.layer-height-number')?.addEventListener('change', handleLayerHeightChange);
+                newLayerItem.querySelector('.delete-layer-button')?.addEventListener('click', (event) => {
+                    const layerToRemove = event.target.closest(`.${itemClassName}`);
+                    if (layerToRemove instanceof HTMLElement) {
+                        deleteFilamentLayer(layerToRemove);
+                    }
+                });
+                updateSliderSteps();
+                const newFilamentListItem = document.createElement('li');
+                newFilamentListItem.classList.add('filament-list-item');
+                newFilamentListItem.dataset.id = filamentId;
+                newFilamentListItem.innerHTML = `
+                    <span>${newFilamentName}</span>
+                    <div class="row">
+                        <span>Name: <input type="text" value="${newFilamentName}"/></span>
+                    </div>
+                    <div class="row">
+                        <span>Color: <input type="color" value="${newFilamentColor}"/> <input type="text" placeholder="Hex Code" value="${newFilamentColor}"/></span>
+                    </div>
+                    <div class="row">
+                        <span>Opacity: <input type="number" step="0.01" min="0" max="1" value="${newOpacityInput.value}"/> mm</span>
+                    </div>
+                `;
+                filamentList.appendChild(newFilamentListItem);
+                const newOption = document.createElement('option');
+                newOption.value = newFilamentName;
+                newOption.textContent = newFilamentName;
+                newOption.dataset.id = filamentId;
+                existingFilamentSelection.appendChild(newOption);
+                newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
+                newColorInput.value = '#000000';
+                newHexInput.value = '#000000';
+                newOpacityInput.value = '0.10';
+                newColorInput.addEventListener('input', () => {
+                    newHexInput.value = newColorInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+                newHexInput.addEventListener('input', () => {
+                    newColorInput.value = newHexInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+                callback(draggableList);
+            }
         }
     });
     addItemButtonExisting.addEventListener('click', () => {
@@ -361,7 +372,7 @@ export function setupDragAndDrop(callback) {
                     newLayerItem.querySelector('.layer-height-number')?.addEventListener('change', handleLayerHeightChange);
                     newLayerItem.querySelector('.delete-layer-button')?.addEventListener('click', (event) => {
                         const layerToRemove = event.target.closest(`.${itemClassName}`);
-                        if (layerToRemove) {
+                        if (layerToRemove instanceof HTMLElement) {
                             deleteFilamentLayer(layerToRemove);
                         }
                     });
@@ -376,8 +387,10 @@ export function setupDragAndDrop(callback) {
         callback(draggableList);
     };
     const deleteFilament = (filamentId) => {
-        draggableList.querySelectorAll(`.${itemClassName}[data-id="${filamentId}"]`).forEach(layer => {
-            draggableList.removeChild(layer);
+        Array.from(draggableList.querySelectorAll(`.${itemClassName}[data-id="${filamentId}"]`)).forEach(layer => {
+            if (layer instanceof HTMLElement) {
+                draggableList.removeChild(layer);
+            }
         });
         const filamentListItem = filamentList.querySelector(`.filament-list-item[data-id="${filamentId}"]`);
         if (filamentListItem) {
@@ -429,7 +442,7 @@ export function setupDragAndDrop(callback) {
     const updateSliderSteps = () => {
         const globalLayerHeight = parseFloat(globalLayerHeightInput.value);
         if (!isNaN(globalLayerHeight)) {
-            draggableList.querySelectorAll('.layer-height-slider').forEach((slider) => {
+            Array.from(draggableList.querySelectorAll('.layer-height-slider')).forEach(slider => {
                 slider.step = globalLayerHeight.toString();
             });
         }
@@ -441,7 +454,7 @@ export function setupDragAndDrop(callback) {
     updateSliderSteps();
 }
 function getDragAfterElement(container, y, itemClassName) {
-    const draggableElements = [...container.querySelectorAll(`.${itemClassName}:not(.dragging)`)];
+    const draggableElements = Array.from(container.querySelectorAll(`.${itemClassName}:not(.dragging)`));
     return Array.from(draggableElements).reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
@@ -452,4 +465,95 @@ function getDragAfterElement(container, y, itemClassName) {
             return closest;
         }
     }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+}
+export function saveFilamentsToStorage() {
+    const filaments = getFilamentListElements();
+    LocalStorageService.saveFilaments(filaments);
+}
+export function loadFilamentsFromStorage() {
+    const savedFilaments = LocalStorageService.loadFilaments();
+    if (savedFilaments.length > 0) {
+        console.log('Restoring', savedFilaments.length, 'filaments from localStorage');
+        const draggableList = document.getElementById('draggable-list');
+        const filamentList = document.getElementById('existing-filament-list');
+        const existingFilamentSelection = document.getElementById('existing-filament-selection');
+        const globalLayerHeightInput = document.getElementById('layer-height-input');
+        if (!draggableList || !filamentList || !existingFilamentSelection) {
+            console.error("Required elements not found for loading filaments.");
+            return;
+        }
+        draggableList.innerHTML = '';
+        const createNewItem = filamentList.querySelector('.filament-list-item:first-child');
+        filamentList.innerHTML = '';
+        if (createNewItem) {
+            filamentList.appendChild(createNewItem);
+        }
+        const chooseOption = existingFilamentSelection.querySelector('option[value="None"]');
+        existingFilamentSelection.innerHTML = '';
+        if (chooseOption) {
+            existingFilamentSelection.appendChild(chooseOption);
+        }
+        savedFilaments.forEach((filamentData, index) => {
+            const filamentId = `filament-${index}`;
+            const initialLayerHeight = filamentData.layerHeight || parseFloat(globalLayerHeightInput.value) || 0.08;
+            const newLayerItem = document.createElement('li');
+            newLayerItem.classList.add('draggable-item');
+            newLayerItem.dataset.id = filamentId;
+            newLayerItem.innerHTML = `
+                <div class="drag-handle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="row">
+                    <span>Name: <input type="text" value="${filamentData.name}" readonly/></span>
+                </div>
+                <div class="row">
+                    Colour: <div class="h-gap-small"></div> <input type="color" value="${filamentData.color}" disabled/>
+                    <div class="h-gap"></div>
+                    Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5" value="${filamentData.opacity}" class="filament-layer-opacity" readonly/>
+                </div>
+                <div class="row">
+                    Layer Height:
+                    <div class="h-gap-small"></div>
+                    <input type="range" min="0.00" max="2" step="${globalLayerHeightInput.value}" value="${initialLayerHeight}" class="layer-height-slider">
+                    <div class="h-gap"></div>
+                    <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
+                    <div class="h-gap-small"></div> mm
+                </div>
+                <button class="delete-layer-button">Delete</button>
+            `;
+            draggableList.appendChild(newLayerItem);
+            const newFilamentListItem = document.createElement('li');
+            newFilamentListItem.classList.add('filament-list-item');
+            newFilamentListItem.dataset.id = filamentId;
+            newFilamentListItem.innerHTML = `
+                <span>${filamentData.name}</span>
+                <div class="row">
+                    <span>Name: <input type="text" value="${filamentData.name}"/></span>
+                </div>
+                <div class="row">
+                    <span>Color: <input type="color" value="${filamentData.color}"/> <input type="text" placeholder="Hex Code" value="${filamentData.color}"/></span>
+                </div>
+                <div class="row">
+                    <span>Opacity: <input type="number" step="0.01" min="0" max="1" value="${filamentData.opacity}"/> mm</span>
+                </div>
+            `;
+            filamentList.appendChild(newFilamentListItem);
+            const newOption = document.createElement('option');
+            newOption.value = filamentData.name;
+            newOption.textContent = filamentData.name;
+            newOption.dataset.id = filamentId;
+            existingFilamentSelection.appendChild(newOption);
+        });
+        filamentIdCounter = savedFilaments.length;
+        console.log('Filaments restored successfully');
+    }
+}
+export function hasSavedFilaments() {
+    return LocalStorageService.hasSavedFilaments();
+}
+export function clearSavedFilaments() {
+    LocalStorageService.clearFilaments();
+    console.log('Saved filaments cleared');
 }

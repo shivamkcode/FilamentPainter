@@ -1,4 +1,5 @@
 import {getOpacity} from "../tools/AutoOpacity.js";
+import { LocalStorageService } from "../services/LocalStorage.js";
 
 export interface FilamentData {
     name: string;
@@ -76,7 +77,7 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
     };
 
     // Initial drag handle setup
-    draggableList.querySelectorAll(`.${dragHandleClassName}`).forEach(attachDragHandlers);
+    Array.from(draggableList.querySelectorAll(`.${dragHandleClassName}`)).forEach(el => attachDragHandlers(el as HTMLElement));
 
     draggableList.addEventListener('dragend', (e: DragEvent) => {
         if (draggedItem) {
@@ -108,7 +109,7 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
             }
         });
         // Update the dropdown option
-        const option = existingFilamentSelection.querySelector(`option[data-id="${filamentId}"]`);
+        const option = existingFilamentSelection.querySelector(`option[data-id="${filamentId}"]`) as HTMLOptionElement | null;
         if (option) {
             option.textContent = newName;
             option.value = newName;
@@ -183,7 +184,9 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
             const max = parseFloat(target.max) || Infinity;
             newValue = Math.max(min, Math.min(newValue, max));
 
-            updateLayerHeight(layerItem, newValue);
+            if (layerItem instanceof HTMLElement) {
+                updateLayerHeight(layerItem, newValue);
+            }
             callback(draggableList);
         }
     };
@@ -198,7 +201,7 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
         const target = event.target as HTMLInputElement;
         const listItem = target.closest('.filament-list-item');
         if (listItem) {
-            const filamentId = listItem.dataset.id;
+            const filamentId = (listItem as HTMLElement).dataset.id;
             const nameSpan = listItem.querySelector('span');
             const nameInput = listItem.querySelector<HTMLInputElement>('input[type="text"]');
             const colorInput = listItem.querySelectorAll<HTMLInputElement>('input[type="color"]')[0];
@@ -241,135 +244,143 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
     };
 
     {
-        const newNameInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelector<HTMLInputElement>('input[type="text"]');
-        const newColorInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelector<HTMLInputElement>('input[type="color"]');
-        const newHexInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelector<HTMLInputElement>('input[type="text"][placeholder="Hex Code"]');
-        const newOpacityInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelectorAll<HTMLInputElement>('input[type="number"]')[0];
+        const addItemButtonNewElem = document.querySelector<HTMLInputElement>('#add-item-button-new');
+        const parentNew = addItemButtonNewElem?.parentElement;
+        if (parentNew) {
+            const newNameInput = parentNew.querySelector<HTMLInputElement>('input[type="text"]');
+            const newColorInput = parentNew.querySelector<HTMLInputElement>('input[type="color"]');
+            const newHexInput = parentNew.querySelector<HTMLInputElement>('input[type="text"][placeholder="Hex Code"]');
+            const newOpacityInput = parentNew.querySelectorAll<HTMLInputElement>('input[type="number"]')[0];
 
-        if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
-            newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
-            newColorInput.value = '#000000';
-            newHexInput.value = '#000000';
-            newOpacityInput.value = '0.10'; // Reset opacity as it will be auto-calculated
+            if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
+                newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
+                newColorInput.value = '#000000';
+                newHexInput.value = '#000000';
+                newOpacityInput.value = '0.10'; // Reset opacity as it will be auto-calculated
 
-            // Synchronize color and hex input in "Create New Filament" section
-            newColorInput.addEventListener('input', () => {
-                newHexInput.value = newColorInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
-            newHexInput.addEventListener('input', () => {
-                newColorInput.value = newHexInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
+                // Synchronize color and hex input in "Create New Filament" section
+                newColorInput.addEventListener('input', () => {
+                    newHexInput.value = newColorInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+                newHexInput.addEventListener('input', () => {
+                    newColorInput.value = newHexInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+            }
         }
     }
 
     addItemButtonNew.addEventListener('click', () => {
-        const newNameInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelector<HTMLInputElement>('input[type="text"]');
-        const newColorInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelector<HTMLInputElement>('input[type="color"]');
-        const newHexInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelector<HTMLInputElement>('input[type="text"][placeholder="Hex Code"]');
-        const newOpacityInput = document.querySelector<HTMLInputElement>('#add-item-button-new').parentElement?.querySelectorAll<HTMLInputElement>('input[type="number"]')[0];
+        const addItemButtonNewElem = document.querySelector<HTMLInputElement>('#add-item-button-new');
+        const parentNew = addItemButtonNewElem?.parentElement;
+        if (parentNew) {
+            const newNameInput = parentNew.querySelector<HTMLInputElement>('input[type="text"]');
+            const newColorInput = parentNew.querySelector<HTMLInputElement>('input[type="color"]');
+            const newHexInput = parentNew.querySelector<HTMLInputElement>('input[type="text"][placeholder="Hex Code"]');
+            const newOpacityInput = parentNew.querySelectorAll<HTMLInputElement>('input[type="number"]')[0];
 
-        if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
-            const newFilamentName = newNameInput.value;
-            const newFilamentColor = newColorInput.value;
-            const filamentId = `filament-${filamentIdCounter++}`;
-            const initialLayerHeight = parseFloat(globalLayerHeightInput.value) || 0.08;
+            if (newNameInput && newColorInput && newHexInput && newOpacityInput) {
+                const newFilamentName = newNameInput.value;
+                const newFilamentColor = newColorInput.value;
+                const filamentId = `filament-${filamentIdCounter++}`;
+                const initialLayerHeight = parseFloat(globalLayerHeightInput.value) || 0.08;
 
-            if (!newFilamentColor) {
-                alert("Please select a color for the new filament.");
-                return;
-            }
-
-            // Calculate initial opacity
-            // updateOpacityFromColorInput(newColorInput, newOpacityInput);
-
-            // Add to Filament Layers
-            const newLayerItem = document.createElement('li');
-            newLayerItem.classList.add(itemClassName);
-            newLayerItem.dataset.id = filamentId;
-            newLayerItem.innerHTML = `
-                <div class="${dragHandleClassName}">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>
-                    </svg>
-                </div>
-                <div class="row">
-                    <span>Name: <input type="text" value="${newFilamentName}" readonly/></span>
-                </div>
-                <div class="row">
-                    Colour: <div class="h-gap-small"></div> <input type="color" value="${newFilamentColor}" disabled/>
-                    <div class="h-gap"></div>
-                    Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5" value="${newOpacityInput.value}" class="filament-layer-opacity" readonly/>
-                </div>
-                <div class="row">
-                    Layer Height:
-                    <div class="h-gap-small"></div>
-                    <input type="range" min="0.00" max="2" step="${globalLayerHeightInput.value}" value="${initialLayerHeight}" class="layer-height-slider">
-                    <div class="h-gap"></div>
-                    <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
-                    <div class="h-gap-small"></div> mm
-                </div>
-                <button class="delete-layer-button">Delete</button>
-            `;
-            draggableList.appendChild(newLayerItem);
-            attachDragHandlers(newLayerItem.querySelector(`.${dragHandleClassName}`) as HTMLElement);
-
-            // Attach event listeners to the new layer height controls
-            newLayerItem.querySelector('.layer-height-slider')?.addEventListener('input', handleLayerHeightChange);
-            newLayerItem.querySelector('.layer-height-number')?.addEventListener('change', handleLayerHeightChange);
-            newLayerItem.querySelector('.delete-layer-button')?.addEventListener('click', (event) => {
-                const layerToRemove = (event.target as HTMLElement).closest(`.${itemClassName}`);
-                if (layerToRemove) {
-                    deleteFilamentLayer(layerToRemove);
+                if (!newFilamentColor) {
+                    alert("Please select a color for the new filament.");
+                    return;
                 }
-            });
 
-            // Update slider steps after adding the new item
-            updateSliderSteps();
+                // Calculate initial opacity
+                // updateOpacityFromColorInput(newColorInput, newOpacityInput);
 
-            // Add to Filament List
-            const newFilamentListItem = document.createElement('li');
-            newFilamentListItem.classList.add('filament-list-item');
-            newFilamentListItem.dataset.id = filamentId;
-            newFilamentListItem.innerHTML = `
-                <span>${newFilamentName}</span>
-                <div class="row">
-                    <span>Name: <input type="text" value="${newFilamentName}"/></span>
-                </div>
-                <div class="row">
-                    <span>Color: <input type="color" value="${newFilamentColor}"/> <input type="text" placeholder="Hex Code" value="${newFilamentColor}"/></span>
-                </div>
-                <div class="row">
-                    <span>Opacity: <input type="number" step="0.01" min="0" max="1" value="${newOpacityInput.value}"/> mm</span>
-                </div>
-            `;
-            filamentList.appendChild(newFilamentListItem);
+                // Add to Filament Layers
+                const newLayerItem = document.createElement('li');
+                newLayerItem.classList.add(itemClassName);
+                newLayerItem.dataset.id = filamentId;
+                newLayerItem.innerHTML = `
+                    <div class="${dragHandleClassName}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="row">
+                        <span>Name: <input type="text" value="${newFilamentName}" readonly/></span>
+                    </div>
+                    <div class="row">
+                        Colour: <div class="h-gap-small"></div> <input type="color" value="${newFilamentColor}" disabled/>
+                        <div class="h-gap"></div>
+                        Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5" value="${newOpacityInput.value}" class="filament-layer-opacity" readonly/>
+                    </div>
+                    <div class="row">
+                        Layer Height:
+                        <div class="h-gap-small"></div>
+                        <input type="range" min="0.00" max="2" step="${globalLayerHeightInput.value}" value="${initialLayerHeight}" class="layer-height-slider">
+                        <div class="h-gap"></div>
+                        <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
+                        <div class="h-gap-small"></div> mm
+                    </div>
+                    <button class="delete-layer-button">Delete</button>
+                `;
+                draggableList.appendChild(newLayerItem);
+                attachDragHandlers(newLayerItem.querySelector(`.${dragHandleClassName}`) as HTMLElement);
 
-            // Update Existing Filament Dropdown
-            const newOption = document.createElement('option');
-            newOption.value = newFilamentName;
-            newOption.textContent = newFilamentName;
-            newOption.dataset.id = filamentId;
-            existingFilamentSelection.appendChild(newOption);
+                // Attach event listeners to the new layer height controls
+                newLayerItem.querySelector('.layer-height-slider')?.addEventListener('input', handleLayerHeightChange);
+                newLayerItem.querySelector('.layer-height-number')?.addEventListener('change', handleLayerHeightChange);
+                newLayerItem.querySelector('.delete-layer-button')?.addEventListener('click', (event) => {
+                    const layerToRemove = (event.target as HTMLElement).closest(`.${itemClassName}`);
+                    if (layerToRemove instanceof HTMLElement) {
+                        deleteFilamentLayer(layerToRemove);
+                    }
+                });
 
-            // Reset the new filament inputs
-            newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
-            newColorInput.value = '#000000';
-            newHexInput.value = '#000000';
-            newOpacityInput.value = '0.10'; // Reset opacity as it will be auto-calculated
+                // Update slider steps after adding the new item
+                updateSliderSteps();
 
-            // Synchronize color and hex input in "Create New Filament" section
-            newColorInput.addEventListener('input', () => {
-                newHexInput.value = newColorInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
-            newHexInput.addEventListener('input', () => {
-                newColorInput.value = newHexInput.value;
-                updateOpacityFromColorInput(newColorInput, newOpacityInput);
-            });
+                // Add to Filament List
+                const newFilamentListItem = document.createElement('li');
+                newFilamentListItem.classList.add('filament-list-item');
+                newFilamentListItem.dataset.id = filamentId;
+                newFilamentListItem.innerHTML = `
+                    <span>${newFilamentName}</span>
+                    <div class="row">
+                        <span>Name: <input type="text" value="${newFilamentName}"/></span>
+                    </div>
+                    <div class="row">
+                        <span>Color: <input type="color" value="${newFilamentColor}"/> <input type="text" placeholder="Hex Code" value="${newFilamentColor}"/></span>
+                    </div>
+                    <div class="row">
+                        <span>Opacity: <input type="number" step="0.01" min="0" max="1" value="${newOpacityInput.value}"/> mm</span>
+                    </div>
+                `;
+                filamentList.appendChild(newFilamentListItem);
 
-            callback(draggableList);
+                // Update Existing Filament Dropdown
+                const newOption = document.createElement('option');
+                newOption.value = newFilamentName;
+                newOption.textContent = newFilamentName;
+                newOption.dataset.id = filamentId;
+                existingFilamentSelection.appendChild(newOption);
+
+                // Reset the new filament inputs
+                newNameInput.value = `Filament ${filamentList.querySelectorAll('.filament-list-item').length + 1}`;
+                newColorInput.value = '#000000';
+                newHexInput.value = '#000000';
+                newOpacityInput.value = '0.10'; // Reset opacity as it will be auto-calculated
+
+                // Synchronize color and hex input in "Create New Filament" section
+                newColorInput.addEventListener('input', () => {
+                    newHexInput.value = newColorInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+                newHexInput.addEventListener('input', () => {
+                    newColorInput.value = newHexInput.value;
+                    updateOpacityFromColorInput(newColorInput, newOpacityInput);
+                });
+
+                callback(draggableList);
+            }
         }
     });
 
@@ -429,7 +440,7 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
                     newLayerItem.querySelector('.layer-height-number')?.addEventListener('change', handleLayerHeightChange);
                     newLayerItem.querySelector('.delete-layer-button')?.addEventListener('click', (event) => {
                         const layerToRemove = (event.target as HTMLElement).closest(`.${itemClassName}`);
-                        if (layerToRemove) {
+                        if (layerToRemove instanceof HTMLElement) {
                             deleteFilamentLayer(layerToRemove);
                         }
                     });
@@ -449,18 +460,20 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
 
     const deleteFilament = (filamentId: string) => {
         // Remove from Filament Layers
-        draggableList.querySelectorAll(`.${itemClassName}[data-id="${filamentId}"]`).forEach(layer => {
-            draggableList.removeChild(layer);
+        Array.from(draggableList.querySelectorAll(`.${itemClassName}[data-id="${filamentId}"]`)).forEach(layer => {
+            if (layer instanceof HTMLElement) {
+                draggableList.removeChild(layer);
+            }
         });
 
         // Remove from Filament List
-        const filamentListItem = filamentList.querySelector(`.filament-list-item[data-id="${filamentId}"]`);
+        const filamentListItem = filamentList.querySelector(`.filament-list-item[data-id="${filamentId}"]`) as HTMLElement | null;
         if (filamentListItem) {
             filamentList.removeChild(filamentListItem);
         }
 
         // Remove from Existing Filament Dropdown
-        const optionToRemove = existingFilamentSelection.querySelector(`option[data-id="${filamentId}"]`);
+        const optionToRemove = existingFilamentSelection.querySelector(`option[data-id="${filamentId}"]`) as HTMLOptionElement | null;
         if (optionToRemove) {
             existingFilamentSelection.removeChild(optionToRemove);
         }
@@ -473,7 +486,7 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
         const target = event.target as HTMLInputElement;
         const listItem = target.closest('.filament-list-item');
         if (listItem) {
-            const filamentId = listItem.dataset.id;
+            const filamentId = (listItem as HTMLElement).dataset.id;
             const nameSpan = listItem.querySelector('span');
             const nameInput = listItem.querySelector<HTMLInputElement>('input[type="text"]');
             const colorInput = listItem.querySelectorAll<HTMLInputElement>('input[type="color"]')[0];
@@ -508,8 +521,8 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
     const updateSliderSteps = () => {
         const globalLayerHeight = parseFloat(globalLayerHeightInput.value);
         if (!isNaN(globalLayerHeight)) {
-            draggableList.querySelectorAll('.layer-height-slider').forEach((slider: HTMLInputElement) => {
-                slider.step = globalLayerHeight.toString();
+            Array.from(draggableList.querySelectorAll('.layer-height-slider')).forEach(slider => {
+                (slider as HTMLInputElement).step = globalLayerHeight.toString();
             });
         }
     };
@@ -524,7 +537,7 @@ export function setupDragAndDrop(callback: (list: HTMLUListElement) => void): vo
 }
 
 function getDragAfterElement(container: HTMLUListElement, y: number, itemClassName: string): HTMLElement | null {
-    const draggableElements = [...container.querySelectorAll(`.${itemClassName}:not(.dragging)`) as NodeListOf<HTMLElement>];
+    const draggableElements = Array.from(container.querySelectorAll(`.${itemClassName}:not(.dragging)`)) as HTMLElement[];
 
     interface ClosestElement {
         offset: number;
@@ -540,4 +553,131 @@ function getDragAfterElement(container: HTMLUListElement, y: number, itemClassNa
             return closest;
         }
     }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+}
+
+/**
+ * Save current filament data to localStorage
+ */
+export function saveFilamentsToStorage(): void {
+    const filaments = getFilamentListElements();
+    LocalStorageService.saveFilaments(filaments);
+}
+
+/**
+ * Load filament data from localStorage and restore the UI
+ */
+export function loadFilamentsFromStorage(): void {
+    const savedFilaments = LocalStorageService.loadFilaments();
+    if (savedFilaments.length > 0) {
+        console.log('Restoring', savedFilaments.length, 'filaments from localStorage');
+        
+        // Clear existing filaments first
+        const draggableList = document.getElementById('draggable-list') as HTMLUListElement;
+        const filamentList = document.getElementById('existing-filament-list') as HTMLUListElement;
+        const existingFilamentSelection = document.getElementById('existing-filament-selection') as HTMLSelectElement;
+        const globalLayerHeightInput = document.getElementById('layer-height-input') as HTMLInputElement;
+        
+        if (!draggableList || !filamentList || !existingFilamentSelection) {
+            console.error("Required elements not found for loading filaments.");
+            return;
+        }
+
+        // Clear existing layers
+        draggableList.innerHTML = '';
+        
+        // Clear existing filament list items (but keep the "Create New Filament" item)
+        const createNewItem = filamentList.querySelector('.filament-list-item:first-child');
+        filamentList.innerHTML = '';
+        if (createNewItem) {
+            filamentList.appendChild(createNewItem);
+        }
+        
+        // Clear existing dropdown options (but keep the "Choose an existing filament" option)
+        const chooseOption = existingFilamentSelection.querySelector('option[value="None"]');
+        existingFilamentSelection.innerHTML = '';
+        if (chooseOption) {
+            existingFilamentSelection.appendChild(chooseOption);
+        }
+
+        // Restore filaments
+        savedFilaments.forEach((filamentData, index) => {
+            const filamentId = `filament-${index}`;
+            const initialLayerHeight = filamentData.layerHeight || parseFloat(globalLayerHeightInput.value) || 0.08;
+
+            // Add to Filament Layers
+            const newLayerItem = document.createElement('li');
+            newLayerItem.classList.add('draggable-item');
+            newLayerItem.dataset.id = filamentId;
+            newLayerItem.innerHTML = `
+                <div class="drag-handle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 9H21V11H3V9ZM3 15H21V17H3V15Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="row">
+                    <span>Name: <input type="text" value="${filamentData.name}" readonly/></span>
+                </div>
+                <div class="row">
+                    Colour: <div class="h-gap-small"></div> <input type="color" value="${filamentData.color}" disabled/>
+                    <div class="h-gap"></div>
+                    Opacity: <div class="h-gap-small"></div> <input type="number" step="0.01" min="0" max="5" value="${filamentData.opacity}" class="filament-layer-opacity" readonly/>
+                </div>
+                <div class="row">
+                    Layer Height:
+                    <div class="h-gap-small"></div>
+                    <input type="range" min="0.00" max="2" step="${globalLayerHeightInput.value}" value="${initialLayerHeight}" class="layer-height-slider">
+                    <div class="h-gap"></div>
+                    <input type="number" min="0.00" max="2" step="0.01" value="${initialLayerHeight}" class="layer-height-number">
+                    <div class="h-gap-small"></div> mm
+                </div>
+                <button class="delete-layer-button">Delete</button>
+            `;
+            draggableList.appendChild(newLayerItem);
+
+            // Add to Filament List
+            const newFilamentListItem = document.createElement('li');
+            newFilamentListItem.classList.add('filament-list-item');
+            newFilamentListItem.dataset.id = filamentId;
+            newFilamentListItem.innerHTML = `
+                <span>${filamentData.name}</span>
+                <div class="row">
+                    <span>Name: <input type="text" value="${filamentData.name}"/></span>
+                </div>
+                <div class="row">
+                    <span>Color: <input type="color" value="${filamentData.color}"/> <input type="text" placeholder="Hex Code" value="${filamentData.color}"/></span>
+                </div>
+                <div class="row">
+                    <span>Opacity: <input type="number" step="0.01" min="0" max="1" value="${filamentData.opacity}"/> mm</span>
+                </div>
+            `;
+            filamentList.appendChild(newFilamentListItem);
+
+            // Update Existing Filament Dropdown
+            const newOption = document.createElement('option');
+            newOption.value = filamentData.name;
+            newOption.textContent = filamentData.name;
+            newOption.dataset.id = filamentId;
+            existingFilamentSelection.appendChild(newOption);
+        });
+
+        // Update filament ID counter
+        filamentIdCounter = savedFilaments.length;
+        
+        console.log('Filaments restored successfully');
+    }
+}
+
+/**
+ * Check if there are saved filaments available
+ */
+export function hasSavedFilaments(): boolean {
+    return LocalStorageService.hasSavedFilaments();
+}
+
+/**
+ * Clear all saved filament data
+ */
+export function clearSavedFilaments(): void {
+    LocalStorageService.clearFilaments();
+    console.log('Saved filaments cleared');
 }
